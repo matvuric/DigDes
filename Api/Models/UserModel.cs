@@ -1,15 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Api.Models
+﻿namespace Api.Models
 {
     public class UserModel
     {
-        [Required]
         public Guid Id { get; set; }
-        [Required]
         public string Name { get; set; }
-        [Required]
         public string Email { get; set; }
         public DateTimeOffset BirthDate { get; set; }
+
+        public UserModel(Guid id, string name, string email, DateTimeOffset birthDate)
+        {
+            Id = id;
+            Name = name;
+            Email = email;
+            BirthDate = birthDate;
+        }
     }
 }
