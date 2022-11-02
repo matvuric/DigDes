@@ -1,11 +1,11 @@
-using Api;
 using Api.Configs;
 using Api.Services;
-using DAL.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
+namespace Api;
 
 internal class Program
 {
@@ -22,11 +22,11 @@ internal class Program
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(c =>
+        builder.Services.AddSwaggerGen(options =>
         {
-            c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
             {
-                Description = "¬ведите токен пользовател€:",
+                Description = "Enter user token:",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
                 Type = SecuritySchemeType.ApiKey,
@@ -34,7 +34,7 @@ internal class Program
 
             });
 
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
                     new OpenApiSecurityScheme
@@ -63,13 +63,10 @@ internal class Program
 
         builder.Services.AddScoped<UserService>();
 
-        builder.Services.AddAuthentication(o =>
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
-            o.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(o =>
-        {
-            o.RequireHttpsMetadata = false;
-            o.TokenValidationParameters = new TokenValidationParameters
+            options.RequireHttpsMetadata = false; // Change to true / SSL
+            options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidIssuer = authConfig.Issuer,
@@ -77,17 +74,17 @@ internal class Program
                 ValidAudience = authConfig.Audience,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = authConfig.SymmetricSecurityKey(),
+                IssuerSigningKey = authConfig.GetSymmetricSecurityKey(),
                 ClockSkew = TimeSpan.Zero,
             };
         });
 
-        builder.Services.AddAuthorization(o =>
+        builder.Services.AddAuthorization(options =>
         {
-            o.AddPolicy("ValidAccessToken", p =>
+            options.AddPolicy("ValidAccessToken", policy =>
             {
-                p.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
-                p.RequireAuthenticatedUser();
+                policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+                policy.RequireAuthenticatedUser();
             });
         });
 

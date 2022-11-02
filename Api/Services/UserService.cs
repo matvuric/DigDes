@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 
 namespace Api.Services
 {
@@ -58,9 +57,10 @@ namespace Api.Services
             return _mapper.Map<UserModel>(user);
         }
 
-        private async Task<DAL.Entities.User> GetUserByCredention(string login, string password)
+        private async Task<DAL.Entities.User> GetUserByCredentials(string login, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == login.ToLower());
+            var user = await _context.Users.FirstOrDefaultAsync(x => 
+                string.Equals(x.Email, login, StringComparison.CurrentCultureIgnoreCase));
             
             if(user == null)
             {
@@ -89,18 +89,18 @@ namespace Api.Services
                     new Claim("id", user.Id.ToString()),
                 },
                 expires: DateTime.Now.AddMinutes(_config.LifeTime),
-                signingCredentials: new SigningCredentials(_config.SymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
+                signingCredentials: new SigningCredentials(_config.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
                 );
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
             var refresh = new JwtSecurityToken(
                 notBefore: dtNow,
                 claims: new Claim[]
-                {
+                {   
                     new Claim("id", user.Id.ToString()),
                 },
                 expires: DateTime.Now.AddHours(_config.LifeTime),
-                signingCredentials: new SigningCredentials(_config.SymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
+                signingCredentials: new SigningCredentials(_config.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
                 );
             var encodedRefresh = new JwtSecurityTokenHandler().WriteToken(refresh);
 
@@ -109,7 +109,7 @@ namespace Api.Services
 
         public async Task<TokenModel> GetToken(string login, string password)
         {
-            var user = await GetUserByCredention(login, password);
+            var user = await GetUserByCredentials(login, password);
 
             return GenerateTokens(user);
         }
@@ -123,7 +123,7 @@ namespace Api.Services
                 ValidateAudience = false,
                 ValidateIssuerSigningKey = true,
                 ValidateLifetime = true,
-                IssuerSigningKey = _config.SymmetricSecurityKey()
+                IssuerSigningKey = _config.GetSymmetricSecurityKey()
             };
 
             var principal = new JwtSecurityTokenHandler().ValidateToken(refreshToken, validParams, out var securityToken);
