@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using DAL.Entities;
 
 namespace Api.Services
 {
@@ -40,9 +41,14 @@ namespace Api.Services
             return user;
         }
 
-        private TokenModel GenerateTokens(DAL.Entities.User user)
+        private TokenModel GenerateTokens(DAL.Entities.UserSession session)
         {
             var dtNow = DateTime.Now;
+
+            if (session.User == null)
+            {
+                throw new Exception("User is not exist");
+            }
 
             var jwt = new JwtSecurityToken(
                 issuer: _config.Issuer,
@@ -50,8 +56,9 @@ namespace Api.Services
                 notBefore: dtNow,
                 claims: new Claim[]
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, user.Name),
-                    new Claim("id", user.Id.ToString()),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, session.User.Name),
+                    new Claim("id", session.User.Id.ToString()),
+                    new Claim("sessionId", session.Id.ToString()),
                 },
                 expires: DateTime.Now.AddMinutes(_config.LifeTime),
                 signingCredentials: new SigningCredentials(_config.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
@@ -62,7 +69,7 @@ namespace Api.Services
                 notBefore: dtNow,
                 claims: new Claim[]
                 {
-                    new Claim("id", user.Id.ToString()),
+                    new Claim("refreshToken", session.RefreshToken.ToString()),
                 },
                 expires: DateTime.Now.AddHours(_config.LifeTime),
                 signingCredentials: new SigningCredentials(_config.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
@@ -75,10 +82,39 @@ namespace Api.Services
         public async Task<TokenModel> GetToken(string login, string password)
         {
             var user = await GetUserByCredentials(login, password);
-
-            return GenerateTokens(user);
+            var session = await _context.UserSessions.AddAsync(new DAL.Entities.UserSession()
+            {
+                User = user,
+                RefreshToken = Guid.NewGuid(),
+                Created = DateTime.UtcNow,
+                Id = Guid.NewGuid()
+            });
+            await _context.SaveChangesAsync();
+            return GenerateTokens(session.Entity);
         }
 
+        public async Task<UserSession> GetSessionById(Guid id)
+        {
+            var session = await _context.UserSessions.FirstOrDefaultAsync(userSession => userSession.Id == id);
+            if (session == null)
+            {
+                throw new Exception("Session is not found");
+            }
+
+            return session;
+        }
+
+        private async Task<UserSession> GetSessionByRefreshToken(Guid id)
+        {
+            var session = await _context.UserSessions.Include(x => x.User)
+                .FirstOrDefaultAsync(userSession => userSession.RefreshToken == id);
+            if (session == null)
+            {
+                throw new Exception("Session is not found");
+            }
+
+            return session;
+        }
 
         public async Task<TokenModel> GetTokenByRefreshToken(string refreshToken)
         {
@@ -100,17 +136,18 @@ namespace Api.Services
                 throw new SecurityTokenException("Invalid token");
             }
 
-            if (principal.Claims.FirstOrDefault(x => x.Type == "id")?.Value is String userIdString
-                && Guid.TryParse(userIdString, out var userId))
+            if (principal.Claims.FirstOrDefault(claim => claim.Type == "refreshToken")?.Value is String refreshIdString
+                && Guid.TryParse(refreshIdString, out var refreshId))
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
-
-                if (user == null)
+                var session = await GetSessionByRefreshToken(refreshId);
+                if (!session.IsActive)
                 {
-                    throw new Exception("User not found");
+                    throw new Exception("Session is not active");
                 }
 
-                return GenerateTokens(user);
+                session.RefreshToken = Guid.NewGuid();
+                await _context.SaveChangesAsync();
+                return GenerateTokens(session);
             }
             else
             {
