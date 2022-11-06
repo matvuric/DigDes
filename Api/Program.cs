@@ -57,11 +57,12 @@ internal class Program
         builder.Services.AddDbContext<DAL.DataContext>(options =>
         {
             options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSql"), sql => { });
-        });
+        }, contextLifetime: ServiceLifetime.Scoped);
 
         builder.Services.AddAutoMapper(typeof(MapperProfile).Assembly);
 
         builder.Services.AddScoped<UserService>();
+        builder.Services.AddScoped<AuthService>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
@@ -72,9 +73,9 @@ internal class Program
                 ValidIssuer = authConfig.Issuer,
                 ValidateAudience = true,
                 ValidAudience = authConfig.Audience,
-                ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = authConfig.GetSymmetricSecurityKey(),
+                ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero,
             };
         });
@@ -107,7 +108,6 @@ internal class Program
         }
 
         app.UseHttpsRedirection();
-
 
         app.UseAuthentication();
 
