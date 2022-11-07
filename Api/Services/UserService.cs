@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using DAL.Entities;
 
 namespace Api.Services
 {
@@ -31,13 +32,9 @@ namespace Api.Services
 
         public async Task DeleteUser(Guid userId)
         {
-            var dbUser = await _context.Users.FirstOrDefaultAsync(user => user.Id == userId);
-
-            if (dbUser != null)
-            {
-                _context.Users.Remove(dbUser);
-                await _context.SaveChangesAsync();
-            }
+            var dbUser = await GetUserById(userId);
+            _context.Users.Remove(dbUser);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Guid> CreateUser(CreateUserModel model)
@@ -53,7 +50,7 @@ namespace Api.Services
             return await _context.Users.AsNoTracking().ProjectTo<UserModel>(_mapper.ConfigurationProvider).ToListAsync();
         }
 
-        public async Task<DAL.Entities.User> GetUserById(Guid id)
+        public async Task<User> GetUserById(Guid id)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
 
@@ -70,6 +67,40 @@ namespace Api.Services
             var user = await GetUserById(id);
 
             return _mapper.Map<UserModel>(user);
+        }
+
+        private async Task<User> GetUserByIdWithAvatar(Guid id)
+        {
+            var user = await _context.Users.Include(user => user.Avatar).FirstOrDefaultAsync(x => x.Id == id);
+
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+
+            return user;
+        }
+
+        public async Task SetAvatar(Guid userId, MetaDataModel meta, string filePath)
+        {
+            var user = await GetUserByIdWithAvatar(userId);
+            var avatar = new Avatar
+            {
+                Name = meta.Name,
+                MimeType = meta.MimeType,
+                FilePath = filePath,
+                Size = meta.Size,
+                Author = user,
+            };
+            user.Avatar = avatar;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<AttachModel> GetAvatarById(Guid userId)
+        {
+            var user = await GetUserByIdWithAvatar(userId);
+            return _mapper.Map<AttachModel>(user.Avatar);
         }
     }
 }

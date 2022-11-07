@@ -14,6 +14,8 @@ namespace Api
                 .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate.UtcDateTime));
 
             CreateMap<DAL.Entities.User, Models.UserModel>();
+
+            CreateMap<DAL.Entities.Avatar, Models.AttachModel>();
         }
     }
 }
