@@ -64,6 +64,7 @@ internal class Program
 
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<AuthService>();
+        builder.Services.AddTransient<AttachService>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
