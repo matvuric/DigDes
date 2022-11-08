@@ -1,7 +1,5 @@
-﻿using System.Net.Mime;
-using Api.Models;
+﻿using Api.Models.Attach;
 using Api.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers

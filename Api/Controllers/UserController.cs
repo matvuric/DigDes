@@ -1,13 +1,8 @@
-﻿using Api.Models;
+﻿using Api.Models.Attach;
+using Api.Models.User;
 using Api.Services;
-using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using DAL;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.IO;
 
 namespace Api.Controllers
 {

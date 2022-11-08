@@ -1,15 +1,10 @@
-﻿using Api.Configs;
-using Api.Models;
-using AutoMapper;
+﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Common;
 using DAL;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using DAL.Entities;
+using Api.Models.User;
+using Api.Models.Attach;
 
 namespace Api.Services
 {
@@ -39,7 +34,7 @@ namespace Api.Services
 
         public async Task<Guid> CreateUser(CreateUserModel model)
         {
-            var dbUser = _mapper.Map<DAL.Entities.User>(model);
+            var dbUser = _mapper.Map<User>(model);
             var t = await _context.Users.AddAsync(dbUser);
             await _context.SaveChangesAsync();
             return t.Entity.Id;

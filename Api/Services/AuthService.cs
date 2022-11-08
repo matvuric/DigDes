@@ -1,7 +1,5 @@
 ﻿using Api.Configs;
 using Api.Models;
-using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Common;
 using DAL;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +22,7 @@ namespace Api.Services
             _config = config.Value;
         }
 
-        private async Task<DAL.Entities.User> GetUserByCredentials(string login, string password)
+        private async Task<User> GetUserByCredentials(string login, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == login.ToLower());
 
@@ -41,7 +39,7 @@ namespace Api.Services
             return user;
         }
 
-        private TokenModel GenerateTokens(DAL.Entities.UserSession session)
+        private TokenModel GenerateTokens(UserSession session)
         {
             var dtNow = DateTime.Now;
 
@@ -54,7 +52,7 @@ namespace Api.Services
                 issuer: _config.Issuer,
                 audience: _config.Audience,
                 notBefore: dtNow,
-                claims: new Claim[]
+                claims: new[]
                 {
                     new Claim(ClaimsIdentity.DefaultNameClaimType, session.User.Name),
                     new Claim("id", session.User.Id.ToString()),
@@ -67,7 +65,7 @@ namespace Api.Services
 
             var refresh = new JwtSecurityToken(
                 notBefore: dtNow,
-                claims: new Claim[]
+                claims: new[]
                 {
                     new Claim("refreshToken", session.RefreshToken.ToString()),
                 },
@@ -82,7 +80,7 @@ namespace Api.Services
         public async Task<TokenModel> GetToken(string login, string password)
         {
             var user = await GetUserByCredentials(login, password);
-            var session = await _context.UserSessions.AddAsync(new DAL.Entities.UserSession()
+            var session = await _context.UserSessions.AddAsync(new UserSession()
             {
                 User = user,
                 RefreshToken = Guid.NewGuid(),
@@ -136,7 +134,7 @@ namespace Api.Services
                 throw new SecurityTokenException("Invalid token");
             }
 
-            if (principal.Claims.FirstOrDefault(claim => claim.Type == "refreshToken")?.Value is String refreshIdString
+            if (principal.Claims.FirstOrDefault(claim => claim.Type == "refreshToken")?.Value is { } refreshIdString
                 && Guid.TryParse(refreshIdString, out var refreshId))
             {
                 var session = await GetSessionByRefreshToken(refreshId);
