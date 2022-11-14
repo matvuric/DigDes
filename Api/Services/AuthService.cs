@@ -22,6 +22,70 @@ namespace Api.Services
             _config = config.Value;
         }
 
+        public async Task<TokenModel> GetToken(string login, string password)
+        {
+            var user = await GetUserByCredentials(login, password);
+            var session = await _context.UserSessions.AddAsync(new UserSession()
+            {
+                User = user,
+                RefreshToken = Guid.NewGuid(),
+                Created = DateTime.UtcNow,
+                Id = Guid.NewGuid()
+            });
+            await _context.SaveChangesAsync();
+            return GenerateTokens(session.Entity);
+        }
+
+        public async Task<UserSession> GetSessionById(Guid id)
+        {
+            var session = await _context.UserSessions.FirstOrDefaultAsync(userSession => userSession.Id == id);
+            if (session == null)
+            {
+                throw new Exception("Session is not found");
+            }
+
+            return session;
+        }
+
+        public async Task<TokenModel> GetTokenByRefreshToken(string refreshToken)
+        {
+            var validParams = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateIssuerSigningKey = true,
+                ValidateLifetime = true,
+                IssuerSigningKey = _config.GetSymmetricSecurityKey()
+            };
+
+            var principal = new JwtSecurityTokenHandler().ValidateToken(refreshToken, validParams, out var securityToken);
+
+            if (securityToken is not JwtSecurityToken jwtToken
+                || !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                    StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+
+            if (principal.Claims.FirstOrDefault(claim => claim.Type == "refreshToken")?.Value is { } refreshIdString
+                && Guid.TryParse(refreshIdString, out var refreshId))
+            {
+                var session = await GetSessionByRefreshToken(refreshId);
+                if (!session.IsActive)
+                {
+                    throw new Exception("Session is not active");
+                }
+
+                session.RefreshToken = Guid.NewGuid();
+                await _context.SaveChangesAsync();
+                return GenerateTokens(session);
+            }
+            else
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+        }
+
         private async Task<User> GetUserByCredentials(string login, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == login.ToLower());
@@ -45,7 +109,7 @@ namespace Api.Services
 
             if (session.User == null)
             {
-                throw new Exception("User is not exist");
+                throw new Exception("User does not exist");
             }
 
             var jwt = new JwtSecurityToken(
@@ -77,31 +141,6 @@ namespace Api.Services
             return new TokenModel(encodedJwt, encodedRefresh);
         }
 
-        public async Task<TokenModel> GetToken(string login, string password)
-        {
-            var user = await GetUserByCredentials(login, password);
-            var session = await _context.UserSessions.AddAsync(new UserSession()
-            {
-                User = user,
-                RefreshToken = Guid.NewGuid(),
-                Created = DateTime.UtcNow,
-                Id = Guid.NewGuid()
-            });
-            await _context.SaveChangesAsync();
-            return GenerateTokens(session.Entity);
-        }
-
-        public async Task<UserSession> GetSessionById(Guid id)
-        {
-            var session = await _context.UserSessions.FirstOrDefaultAsync(userSession => userSession.Id == id);
-            if (session == null)
-            {
-                throw new Exception("Session is not found");
-            }
-
-            return session;
-        }
-
         private async Task<UserSession> GetSessionByRefreshToken(Guid id)
         {
             var session = await _context.UserSessions.Include(x => x.User)
@@ -112,45 +151,6 @@ namespace Api.Services
             }
 
             return session;
-        }
-
-        public async Task<TokenModel> GetTokenByRefreshToken(string refreshToken)
-        {
-            var validParams = new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateIssuerSigningKey = true,
-                ValidateLifetime = true,
-                IssuerSigningKey = _config.GetSymmetricSecurityKey()
-            };
-
-            var principal = new JwtSecurityTokenHandler().ValidateToken(refreshToken, validParams, out var securityToken);
-
-            if (securityToken is not JwtSecurityToken jwtToken
-                || !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new SecurityTokenException("Invalid token");
-            }
-
-            if (principal.Claims.FirstOrDefault(claim => claim.Type == "refreshToken")?.Value is { } refreshIdString
-                && Guid.TryParse(refreshIdString, out var refreshId))
-            {
-                var session = await GetSessionByRefreshToken(refreshId);
-                if (!session.IsActive)
-                {
-                    throw new Exception("Session is not active");
-                }
-
-                session.RefreshToken = Guid.NewGuid();
-                await _context.SaveChangesAsync();
-                return GenerateTokens(session);
-            }
-            else
-            {
-                throw new SecurityTokenException("Invalid token");
-            }
         }
     }
 }

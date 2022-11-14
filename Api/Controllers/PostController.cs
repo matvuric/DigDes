@@ -1,5 +1,4 @@
-﻿using Api.Models;
-using Api.Models.Post;
+﻿using Api.Models.Post;
 using Api.Services;
 using AutoMapper;
 using DAL;

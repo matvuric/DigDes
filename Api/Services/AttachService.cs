@@ -37,19 +37,7 @@ namespace Api.Services
             }
             else
             {
-                if (fileInfo.Directory == null)
-                {
-                    throw new Exception("Temp is not defined");
-                }
-                else
-                {
-                    if (!fileInfo.Directory.Exists)
-                    {
-                        fileInfo.Directory.Create();
-                    }
-                }
-
-                await using (var stream = File.Create(newPath))
+                using (var stream = File.Create(newPath))
                 {
                     await file.CopyToAsync(stream);
                 }

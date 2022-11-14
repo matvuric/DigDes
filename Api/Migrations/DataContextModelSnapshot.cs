@@ -109,9 +109,6 @@ namespace Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AvatarId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTimeOffset>("BirthDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -128,9 +125,6 @@ namespace Api.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AvatarId")
-                        .IsUnique();
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -166,6 +160,12 @@ namespace Api.Migrations
             modelBuilder.Entity("DAL.Entities.Avatar", b =>
                 {
                     b.HasBaseType("DAL.Entities.Attach");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique();
 
                     b.ToTable("Avatars", (string)null);
                 });
@@ -223,15 +223,6 @@ namespace Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DAL.Entities.User", b =>
-                {
-                    b.HasOne("DAL.Entities.Avatar", "Avatar")
-                        .WithOne("User")
-                        .HasForeignKey("DAL.Entities.User", "AvatarId");
-
-                    b.Navigation("Avatar");
-                });
-
             modelBuilder.Entity("DAL.Entities.UserSession", b =>
                 {
                     b.HasOne("DAL.Entities.User", "User")
@@ -250,6 +241,14 @@ namespace Api.Migrations
                         .HasForeignKey("DAL.Entities.Avatar", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("DAL.Entities.User", "Owner")
+                        .WithOne("Avatar")
+                        .HasForeignKey("DAL.Entities.Avatar", "OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("DAL.Entities.PostAttach", b =>
@@ -278,15 +277,11 @@ namespace Api.Migrations
 
             modelBuilder.Entity("DAL.Entities.User", b =>
                 {
+                    b.Navigation("Avatar");
+
                     b.Navigation("Posts");
 
                     b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Avatar", b =>
-                {
-                    b.Navigation("User")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

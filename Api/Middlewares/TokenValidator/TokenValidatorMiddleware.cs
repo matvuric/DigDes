@@ -1,4 +1,6 @@
 ﻿using Api.Services;
+using Common.Consts;
+using Common.Extentions;
 
 namespace Api.Middlewares.TokenValidator
 {
@@ -14,8 +16,8 @@ namespace Api.Middlewares.TokenValidator
         public async Task InvokeAsync(HttpContext context, AuthService authService)
         {
             var isOk = true;
-            var sessionIdString = context.User.Claims.FirstOrDefault(claim => claim.Type == "sessionId")?.Value;
-            if (Guid.TryParse(sessionIdString, out var sessionId))
+            var sessionId = context.User.GetClaimValue<Guid>(ClaimNames.SessionId);
+            if (sessionId != default)
             {
                 var session = await authService.GetSessionById(sessionId);
                 if (!session.IsActive)

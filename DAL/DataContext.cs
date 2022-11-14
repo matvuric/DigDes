@@ -18,7 +18,7 @@ namespace DAL
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseNpgsql(b => b.MigrationsAssembly("Api"));
+            => optionsBuilder.UseNpgsql(builder => builder.MigrationsAssembly("Api"));
 
         public DbSet<User> Users => Set<User>();
         public DbSet<UserSession> UserSessions => Set<UserSession>();

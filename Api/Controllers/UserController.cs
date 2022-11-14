@@ -1,6 +1,8 @@
 ﻿using Api.Models.Attach;
 using Api.Models.User;
 using Api.Services;
+using Common.Consts;
+using Common.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +10,7 @@ namespace Api.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
@@ -15,26 +18,24 @@ namespace Api.Controllers
         public UserController(UserService userService)
         {
             _userService = userService;
-        }
 
-        [HttpPost]
-        public async Task CreateUser(CreateUserModel model)
-        {
-            if (await _userService.CheckUserExist(model.Email))
+            if (userService != null)
             {
-                throw new Exception("User is exist");
+                _userService.SetLinkGenerator(user =>
+                    Url.Action(nameof(GetUserAvatar), new { userId = user.Id, download = false }));
             }
-
-            await _userService.CreateUser(model);
         }
 
         [HttpPost]
-        [Authorize]
         public async Task SetAvatar(MetaDataModel model)
         {
-            var userIdString = User.Claims.FirstOrDefault(x => x.Type == "id")?.Value;
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
 
-            if (Guid.TryParse(userIdString, out var userId))
+            if (userId == default)
+            {
+                throw new Exception("You are not authorized");
+            }
+            else
             {
                 var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), model.TempId.ToString()));
                 if (!tempFileInfo.Exists)
@@ -46,66 +47,63 @@ namespace Api.Controllers
                     var path = Path.Combine(Directory.GetCurrentDirectory(), "Attaches", model.TempId.ToString());
                     var destFileInfo = new FileInfo(path);
 
-                    if (destFileInfo.Directory == null)
+                    if (destFileInfo.Directory != null && !destFileInfo.Directory.Exists)
                     {
-                        throw new Exception("Directory is not defined");
-                    }
-                    else
-                    {
-                        if (!destFileInfo.Directory.Exists)
-                        {
-                            destFileInfo.Directory.Create();
-                        }
+                        destFileInfo.Directory.Create();
                     }
 
                     System.IO.File.Copy(tempFileInfo.FullName, path, true);
                     await _userService.SetAvatar(userId, model, path);
                 }
             }
+        }
+
+        [HttpGet]
+        public async Task<FileStreamResult> GetUserAvatar(Guid userId, bool download = false)
+        {
+            var attach = await _userService.GetAvatarById(userId);
+            var fileStream = new FileStream(attach.FilePath, FileMode.Open);
+
+            if (download)
+            {
+                return File(fileStream, attach.MimeType, attach.Name);
+            }
             else
             {
-                throw new Exception("You are not authorized");
+                return File(fileStream, attach.MimeType);
             }
         }
 
         [HttpGet]
-        public async Task<FileResult> GetUserAvatar(Guid id)
+        public async Task<FileStreamResult> GetCurrentUserAvatar(bool download = false)
         {
-            var avatar = await _userService.GetAvatarById(id);
-            return File(await System.IO.File.ReadAllBytesAsync(avatar.FilePath), avatar.MimeType);
-        }
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
 
-        [HttpGet]
-        public async Task<FileResult> DownloadUserAvatar(Guid id)
-        {
-            var avatar = await _userService.GetAvatarById(id);
-
-            HttpContext.Response.ContentType = avatar.MimeType;
-            var result = new FileContentResult(await System.IO.File.ReadAllBytesAsync(avatar.FilePath), avatar.MimeType)
+            if (userId == default)
             {
-                FileDownloadName = avatar.Name
-            };
-
-            return result;
+                throw new Exception("You are not authorized");
+            }
+            else
+            {
+                return await GetUserAvatar(userId, download);
+            }
         }
 
         [HttpGet]
-        [Authorize]
-        public async Task<List<UserModel>> GetUsers() => await _userService.GetUsers();
+        public async Task<IEnumerable<UserAvatarModel>> GetUsers() => await _userService.GetUsers();
 
         [HttpGet]
-        [Authorize]
         public async Task<UserModel> GetCurrentUser()
         {
-            var userIdString = User.Claims.FirstOrDefault(x => x.Type == "id")?.Value;
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
 
-            if (Guid.TryParse(userIdString, out var userId))
+            if (userId == default)
             {
-                return await _userService.GetUser(userId);
+                throw new Exception("You are not authorized");
             }
             else
             {
-                throw new Exception("You are not authorized");
+                return await _userService.GetUser(userId);
             }
         }
     }
