@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Api.Migrations
 {
     /// <inheritdoc />
-    public partial class attaches : Migration
+    public partial class attachments : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Attaches",
+                name: "Attachments",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -24,9 +24,9 @@ namespace Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Attaches", x => x.Id);
+                    table.PrimaryKey("PK_Attachments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Attaches_Users_AuthorId",
+                        name: "FK_Attachments_Users_AuthorId",
                         column: x => x.AuthorId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -38,7 +38,7 @@ namespace Api.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Text = table.Column<string>(type: "text", nullable: false),
+                    Caption = table.Column<string>(type: "text", nullable: false),
                     CreatedDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     AuthorId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -64,9 +64,9 @@ namespace Api.Migrations
                 {
                     table.PrimaryKey("PK_Avatars", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Avatars_Attaches_Id",
+                        name: "FK_Avatars_Attachments_Id",
                         column: x => x.Id,
-                        principalTable: "Attaches",
+                        principalTable: "Attachments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -78,7 +78,7 @@ namespace Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PostAttaches",
+                name: "PostAttachments",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -86,15 +86,15 @@ namespace Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PostAttaches", x => x.Id);
+                    table.PrimaryKey("PK_PostAttachments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PostAttaches_Attaches_Id",
+                        name: "FK_PostAttachments_Attachments_Id",
                         column: x => x.Id,
-                        principalTable: "Attaches",
+                        principalTable: "Attachments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PostAttaches_Posts_PostId",
+                        name: "FK_PostAttachments_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
                         principalColumn: "Id",
@@ -128,8 +128,8 @@ namespace Api.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Attaches_AuthorId",
-                table: "Attaches",
+                name: "IX_Attachments_AuthorId",
+                table: "Attachments",
                 column: "AuthorId");
 
             migrationBuilder.CreateIndex(
@@ -139,8 +139,8 @@ namespace Api.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_PostAttaches_PostId",
-                table: "PostAttaches",
+                name: "IX_PostAttachments_PostId",
+                table: "PostAttachments",
                 column: "PostId");
 
             migrationBuilder.CreateIndex(
@@ -166,13 +166,13 @@ namespace Api.Migrations
                 name: "Avatars");
 
             migrationBuilder.DropTable(
-                name: "PostAttaches");
+                name: "PostAttachments");
 
             migrationBuilder.DropTable(
                 name: "PostComments");
 
             migrationBuilder.DropTable(
-                name: "Attaches");
+                name: "Attachments");
 
             migrationBuilder.DropTable(
                 name: "Posts");

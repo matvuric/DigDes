@@ -1,6 +1,6 @@
 ﻿namespace Api.Models.Post
 {
-    public class PostAttachModel
+    public class PostAttachmentModel
     {
         public string Url { get; set; } = null!;
         public string Name { get; set; } = null!;

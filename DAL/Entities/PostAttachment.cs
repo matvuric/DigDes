@@ -1,6 +1,6 @@
 ﻿namespace DAL.Entities
 {
-    public class PostAttach : Attach
+    public class PostAttachment : Attachment
     {
         public virtual Post Post { get; set; } = null!;
     }

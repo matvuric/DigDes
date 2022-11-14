@@ -1,13 +1,13 @@
-﻿using Api.Models.Attach;
+﻿using Api.Models.Attachment;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Services
 {
-    public class AttachService
+    public class AttachmentService
     {
-        public async Task<List<MetaDataModel>> UploadFiles([FromForm] List<IFormFile> files)
+        public async Task<List<MetadataModel>> UploadFiles([FromForm] List<IFormFile> files)
         {
-            var res = new List<MetaDataModel>();
+            var res = new List<MetadataModel>();
 
             foreach (var file in files)
             {
@@ -17,10 +17,10 @@ namespace Api.Services
             return res;
         }
 
-        private async Task<MetaDataModel> UploadFile([FromForm] IFormFile file)
+        private async Task<MetadataModel> UploadFile([FromForm] IFormFile file)
         {
             var tempPath = Path.GetTempPath();
-            var meta = new MetaDataModel
+            var meta = new MetadataModel
             {
                 TempId = Guid.NewGuid(),
                 Name = file.FileName,

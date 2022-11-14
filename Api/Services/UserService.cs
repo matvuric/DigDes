@@ -1,4 +1,4 @@
-﻿using Api.Models.Attach;
+﻿using Api.Models.Attachment;
 using Api.Models.User;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -70,7 +70,7 @@ namespace Api.Services
             return user;
         }
 
-        public async Task SetAvatar(Guid userId, MetaDataModel meta, string filePath)
+        public async Task SetAvatar(Guid userId, MetadataModel meta, string filePath)
         {
             var user = await GetUserById(userId);
             var avatar = new Avatar
@@ -86,10 +86,10 @@ namespace Api.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<AttachModel> GetAvatarById(Guid userId)
+        public async Task<AttachmentModel> GetAvatarById(Guid userId)
         {
             var user = await GetUserById(userId);
-            return _mapper.Map<AttachModel>(user.Avatar);
+            return _mapper.Map<AttachmentModel>(user.Avatar);
         }
     }
 }

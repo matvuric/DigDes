@@ -1,12 +1,12 @@
-﻿using Api.Models.Attach;
+﻿using Api.Models.Attachment;
 
 namespace Api.Models.Post
 {
     public class CreatePostModel
     {
-        public Guid UserId { get; set; }
-        public string Text { get; set; } = null!;
-        public DateTimeOffset CreatedDate { get; set; }
-        public List<MetaDataModel> Attaches { get; set; } = null!;
+        public Guid Id { get; set; }
+        public Guid AuthorId { get; set; }
+        public string? Caption { get; set; }
+        public List<MetadataModel>? Attachments { get; set; }
     }
 }

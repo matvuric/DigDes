@@ -1,4 +1,4 @@
-﻿using Api.Models.Attach;
+﻿using Api.Models.Attachment;
 using Api.Models.User;
 using Api.Services;
 using Common.Consts;
@@ -27,7 +27,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task SetAvatar(MetaDataModel model)
+        public async Task SetAvatar(MetadataModel model)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
 
@@ -44,7 +44,7 @@ namespace Api.Controllers
                 }
                 else
                 {
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "Attaches", model.TempId.ToString());
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "Attachments", model.TempId.ToString());
                     var destFileInfo = new FileInfo(path);
 
                     if (destFileInfo.Directory != null && !destFileInfo.Directory.Exists)
@@ -61,16 +61,16 @@ namespace Api.Controllers
         [HttpGet]
         public async Task<FileStreamResult> GetUserAvatar(Guid userId, bool download = false)
         {
-            var attach = await _userService.GetAvatarById(userId);
-            var fileStream = new FileStream(attach.FilePath, FileMode.Open);
+            var attachment = await _userService.GetAvatarById(userId);
+            var fileStream = new FileStream(attachment.FilePath, FileMode.Open);
 
             if (download)
             {
-                return File(fileStream, attach.MimeType, attach.Name);
+                return File(fileStream, attachment.MimeType, attachment.Name);
             }
             else
             {
-                return File(fileStream, attach.MimeType);
+                return File(fileStream, attachment.MimeType);
             }
         }
 

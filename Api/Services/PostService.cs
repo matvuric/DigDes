@@ -1,4 +1,4 @@
-﻿using Api.Models.Attach;
+﻿using Api.Models.Attachment;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -16,9 +16,9 @@ namespace Api.Services
             _context = context;
         }
 
-        public async Task UploadPostAttaches(List<MetaDataModel> attaches, Guid postId, Guid authorId)
+        public async Task UploadPostAttachments(List<MetadataModel> attachments, Guid postId, Guid authorId)
         {
-            foreach (var meta in attaches)
+            foreach (var meta in attachments)
             {
                 var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), meta.TempId.ToString()));
                 if (!tempFileInfo.Exists)
@@ -27,7 +27,7 @@ namespace Api.Services
                 }
                 else
                 {
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "Attaches", meta.TempId.ToString());
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "Attachments", meta.TempId.ToString());
                     var destFileInfo = new FileInfo(path);
 
                     if (destFileInfo.Directory == null)
@@ -43,16 +43,16 @@ namespace Api.Services
                     }
 
                     File.Copy(tempFileInfo.FullName, path, true);
-                    await AddAttaches(postId, meta, path, authorId);
+                    await AddAttachments(postId, meta, path, authorId);
                 }
             }
         }
 
-        private async Task AddAttaches(Guid postId, MetaDataModel meta, string filePath, Guid authorId)
+        private async Task AddAttachments(Guid postId, MetadataModel meta, string filePath, Guid authorId)
         {
-            var post = await GetPostByIdWithAttaches(postId);
+            var post = await GetPostByIdWithAttachments(postId);
             var user = await _userService.GetUserById(authorId);
-            var postAttach = new PostAttach()
+            var postAttachment = new PostAttachment()
             {
                 Name = meta.Name,
                 MimeType = meta.MimeType,
@@ -60,14 +60,14 @@ namespace Api.Services
                 Size = meta.Size,
                 Author = user
             };
-            post.Attaches.Add(postAttach);
+            post.PostAttachments.Add(postAttachment);
 
             await _context.SaveChangesAsync();
         }
 
-        private async Task<Post> GetPostByIdWithAttaches(Guid id)
+        private async Task<Post> GetPostByIdWithAttachments(Guid id)
         {
-            var post = await _context.Posts.Include(post => post.Attaches).FirstOrDefaultAsync(x => x.Id == id);
+            var post = await _context.Posts.Include(post => post.PostAttachments).FirstOrDefaultAsync(x => x.Id == id);
 
             if (post == null)
             {

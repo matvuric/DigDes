@@ -1,6 +1,6 @@
-﻿namespace Api.Models.Attach
+﻿namespace Api.Models.Attachment
 {
-    public class MetaDataModel
+    public class MetadataModel
     {
         public Guid TempId { get; set; }
         public string Name { get; set; } = null!;

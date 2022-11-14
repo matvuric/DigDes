@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20221114160102_attaches")]
-    partial class attaches
+    [Migration("20221114185155_attachments")]
+    partial class attachments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("DAL.Entities.Attach", b =>
+            modelBuilder.Entity("DAL.Entities.Attachment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -53,7 +53,7 @@ namespace Api.Migrations
 
                     b.HasIndex("AuthorId");
 
-                    b.ToTable("Attaches");
+                    b.ToTable("Attachments");
 
                     b.UseTptMappingStrategy();
                 });
@@ -67,12 +67,12 @@ namespace Api.Migrations
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Text")
+                    b.Property<string>("Caption")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -162,7 +162,7 @@ namespace Api.Migrations
 
             modelBuilder.Entity("DAL.Entities.Avatar", b =>
                 {
-                    b.HasBaseType("DAL.Entities.Attach");
+                    b.HasBaseType("DAL.Entities.Attachment");
 
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
@@ -173,19 +173,19 @@ namespace Api.Migrations
                     b.ToTable("Avatars", (string)null);
                 });
 
-            modelBuilder.Entity("DAL.Entities.PostAttach", b =>
+            modelBuilder.Entity("DAL.Entities.PostAttachment", b =>
                 {
-                    b.HasBaseType("DAL.Entities.Attach");
+                    b.HasBaseType("DAL.Entities.Attachment");
 
                     b.Property<Guid>("PostId")
                         .HasColumnType("uuid");
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostAttaches", (string)null);
+                    b.ToTable("PostAttachments", (string)null);
                 });
 
-            modelBuilder.Entity("DAL.Entities.Attach", b =>
+            modelBuilder.Entity("DAL.Entities.Attachment", b =>
                 {
                     b.HasOne("DAL.Entities.User", "Author")
                         .WithMany()
@@ -239,7 +239,7 @@ namespace Api.Migrations
 
             modelBuilder.Entity("DAL.Entities.Avatar", b =>
                 {
-                    b.HasOne("DAL.Entities.Attach", null)
+                    b.HasOne("DAL.Entities.Attachment", null)
                         .WithOne()
                         .HasForeignKey("DAL.Entities.Avatar", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -254,16 +254,16 @@ namespace Api.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("DAL.Entities.PostAttach", b =>
+            modelBuilder.Entity("DAL.Entities.PostAttachment", b =>
                 {
-                    b.HasOne("DAL.Entities.Attach", null)
+                    b.HasOne("DAL.Entities.Attachment", null)
                         .WithOne()
-                        .HasForeignKey("DAL.Entities.PostAttach", "Id")
+                        .HasForeignKey("DAL.Entities.PostAttachment", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("DAL.Entities.Post", "Post")
-                        .WithMany("Attaches")
+                        .WithMany("PostAttachments")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -273,9 +273,9 @@ namespace Api.Migrations
 
             modelBuilder.Entity("DAL.Entities.Post", b =>
                 {
-                    b.Navigation("Attaches");
-
                     b.Navigation("Comments");
+
+                    b.Navigation("PostAttachments");
                 });
 
             modelBuilder.Entity("DAL.Entities.User", b =>

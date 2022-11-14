@@ -1,6 +1,6 @@
 ﻿namespace DAL.Entities
 {
-    public class Attach
+    public class Attachment
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;

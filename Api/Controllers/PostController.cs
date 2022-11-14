@@ -12,26 +12,26 @@ namespace Api.Controllers
     [ApiController]
     public class PostController : ControllerBase
     {
-        private readonly AttachService _attachService;
+        private readonly AttachmentService _attachmentService;
         private readonly PostService _postService;
         private readonly DataContext _context;
         private readonly IMapper _mapper;
 
-        public PostController(AttachService attachService, DataContext context, PostService postService, IMapper mapper)
+        public PostController(AttachmentService attachmentService, DataContext context, PostService postService, IMapper mapper)
         {
-            _attachService = attachService;
+            _attachmentService = attachmentService;
             _postService = postService;
             _mapper = mapper;
             _context = context;
         }
 
         [HttpPost]
-        public async Task CreatePost(string text, Guid id, [FromForm] List<IFormFile> files)
+        public async Task CreatePost(string caption, Guid id, [FromForm] List<IFormFile> files)
         {
             var post = await _context.Posts.AddAsync(new Post()
             {
                 Id = Guid.NewGuid(),
-                Text = text,
+                Caption = caption,
                 CreatedDate = DateTime.UtcNow,
                 AuthorId = id
             });
@@ -40,9 +40,9 @@ namespace Api.Controllers
 
             if (files.Count > 0)
             {
-                var attaches = await _attachService.UploadFiles(files);
+                var attachments = await _attachmentService.UploadFiles(files);
 
-                await _postService.UploadPostAttaches(attaches, post.Entity.Id, post.Entity.AuthorId);
+                await _postService.UploadPostAttachments(attachments, post.Entity.Id, post.Entity.AuthorId);
             }
         }
 
@@ -50,26 +50,26 @@ namespace Api.Controllers
         public async Task<PostModel> GetPost(Guid id)
         {
             var post = await _postService.GetPostById(id);
-            var postAttaches = await _context.PostAttaches.Where(p=>p.Post.Id == id).ToListAsync();
-            foreach (var attach in postAttaches)
+            var postAttachments = await _context.PostAttachments.Where(p=>p.Post.Id == id).ToListAsync();
+            foreach (var attachment in postAttachments)
             {
-                post.Attaches.Add(attach);
+                post.PostAttachments.Add(attachment);
             }
 
             return _mapper.Map<PostModel>(post);
         }
 
         [HttpGet]
-        public async Task<FileResult> GetPostAttach(Guid id)
+        public async Task<FileResult> GetPostAttachment(Guid id)
         {
-            var attach = await _context.PostAttaches.FirstOrDefaultAsync(x => x.Id == id);
+            var attachment = await _context.PostAttachments.FirstOrDefaultAsync(x => x.Id == id);
 
-            if (attach == null)
+            if (attachment == null)
             {
-                throw new Exception("Attach is not found");
+                throw new Exception("Attachment is not found");
             }
 
-            return File(await System.IO.File.ReadAllBytesAsync(attach.FilePath), attach.MimeType);
+            return File(await System.IO.File.ReadAllBytesAsync(attachment.FilePath), attachment.MimeType);
         }
     }
 }

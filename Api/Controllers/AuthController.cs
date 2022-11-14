@@ -1,4 +1,4 @@
-﻿using Api.Models;
+﻿using Api.Models.Token;
 using Api.Models.User;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;

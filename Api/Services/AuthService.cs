@@ -1,5 +1,4 @@
 ﻿using Api.Configs;
-using Api.Models;
 using Common;
 using DAL;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using DAL.Entities;
+using Api.Models.Token;
 
 namespace Api.Services
 {

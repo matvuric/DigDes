@@ -4,7 +4,7 @@
     {
         public Guid UserId { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
-        public string Text { get; set; } = null!;
-        public List<PostAttachModel> Attaches { get; set; } = null!;
+        public string Caption { get; set; } = null!;
+        public List<PostAttachmentModel> PostAttachments { get; set; } = null!;
     }
 }
