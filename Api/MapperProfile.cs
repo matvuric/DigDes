@@ -17,11 +17,16 @@ namespace Api
                 .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate.UtcDateTime));
 
             CreateMap<DAL.Entities.User, UserModel>();
+
+            CreateMap<DAL.Entities.User, UserAvatarModel>();
+
             CreateMap<DAL.Entities.Avatar, AttachmentModel>();
-            CreateMap<DAL.Entities.Post, PostModel>();
-            CreateMap<DAL.Entities.PostAttachment, PostAttachmentModel>()
-                .ForMember(dest => dest.Url, opt => opt.MapFrom(src=> "/api/Post/GetPostAttachment?id=" + src.Id));
-            CreateMap<DAL.Entities.PostComment, CommentModel>();
+
+            CreateMap<DAL.Entities.PostAttachment, AttachmentModel>();
+
+            CreateMap<PostAttachmentModel, DAL.Entities.PostAttachment>();
+
+            CreateMap<PostModel, DAL.Entities.Post>();
         }
     }
 }

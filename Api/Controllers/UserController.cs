@@ -19,11 +19,12 @@ namespace Api.Controllers
         {
             _userService = userService;
 
-            if (userService != null)
-            {
-                _userService.SetLinkGenerator(user =>
-                    Url.Action(nameof(GetUserAvatar), new { userId = user.Id, download = false }));
-            }
+            _userService.SetLinkGenerator(user =>
+                Url.ControllerAction<AttachmentController>(nameof(AttachmentController.GetUserAvatar), new 
+                { 
+                    userId = user.Id, 
+                    download = false
+                }));
         }
 
         [HttpPost]
@@ -55,37 +56,6 @@ namespace Api.Controllers
                     System.IO.File.Copy(tempFileInfo.FullName, path, true);
                     await _userService.SetAvatar(userId, model, path);
                 }
-            }
-        }
-
-        [HttpGet]
-        public async Task<FileStreamResult> GetUserAvatar(Guid userId, bool download = false)
-        {
-            var attachment = await _userService.GetAvatarById(userId);
-            var fileStream = new FileStream(attachment.FilePath, FileMode.Open);
-
-            if (download)
-            {
-                return File(fileStream, attachment.MimeType, attachment.Name);
-            }
-            else
-            {
-                return File(fileStream, attachment.MimeType);
-            }
-        }
-
-        [HttpGet]
-        public async Task<FileStreamResult> GetCurrentUserAvatar(bool download = false)
-        {
-            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
-
-            if (userId == default)
-            {
-                throw new Exception("You are not authorized");
-            }
-            else
-            {
-                return await GetUserAvatar(userId, download);
             }
         }
 

@@ -1,4 +1,7 @@
 ﻿using Api.Models.Attachment;
+using Api.Models.Post;
+using Api.Models.User;
+using AutoMapper;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -7,86 +10,58 @@ namespace Api.Services
 {
     public class PostService
     {
-        private readonly UserService _userService;
         private readonly DataContext _context;
+        private readonly IMapper _mapper;
+        private Func<UserModel, string?>? _linkAvatarGenerator;
+        private Func<AttachmentModel, string?>? _linkAttachmentGenerator;
 
-        public PostService(UserService userService, DataContext context)
+        public PostService(DataContext context, IMapper mapper)
         {
-            _userService = userService;
             _context = context;
+            _mapper = mapper;
         }
 
-        public async Task UploadPostAttachments(List<MetadataModel> attachments, Guid postId, Guid authorId)
+        public void SetLinkGenerator(Func<UserModel, string?> linkAvatarGenerator, Func<AttachmentModel, string?> linkAttachmentGenerator)
         {
-            foreach (var meta in attachments)
-            {
-                var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), meta.TempId.ToString()));
-                if (!tempFileInfo.Exists)
-                {
-                    throw new Exception("File not found");
-                }
-                else
-                {
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "Attachments", meta.TempId.ToString());
-                    var destFileInfo = new FileInfo(path);
-
-                    if (destFileInfo.Directory == null)
-                    {
-                        throw new Exception("Directory is not defined");
-                    }
-                    else
-                    {
-                        if (!destFileInfo.Directory.Exists)
-                        {
-                            destFileInfo.Directory.Create();
-                        }
-                    }
-
-                    File.Copy(tempFileInfo.FullName, path, true);
-                    await AddAttachments(postId, meta, path, authorId);
-                }
-            }
+            _linkAvatarGenerator = linkAvatarGenerator;
+            _linkAttachmentGenerator = linkAttachmentGenerator;
         }
 
-        private async Task AddAttachments(Guid postId, MetadataModel meta, string filePath, Guid authorId)
+        public async Task<Guid> CreatePost(PostModel model)
         {
-            var post = await GetPostByIdWithAttachments(postId);
-            var user = await _userService.GetUserById(authorId);
-            var postAttachment = new PostAttachment()
-            {
-                Name = meta.Name,
-                MimeType = meta.MimeType,
-                FilePath = filePath,
-                Size = meta.Size,
-                Author = user
-            };
-            post.PostAttachments.Add(postAttachment);
-
+            var dbPost = _mapper.Map<Post>(model);
+            
+            var postEntity = await _context.Posts.AddAsync(dbPost);
             await _context.SaveChangesAsync();
+
+            return postEntity.Entity.Id;
         }
 
-        private async Task<Post> GetPostByIdWithAttachments(Guid id)
+        public async Task<IEnumerable<ReturnPostModel>> GetPosts(int skip, int take)
         {
-            var post = await _context.Posts.Include(post => post.PostAttachments).FirstOrDefaultAsync(x => x.Id == id);
+            var posts = await _context.Posts
+                .Include(post => post.Author).ThenInclude(user=> user.Avatar)
+                .Include(post => post.PostAttachments)
+                .AsNoTracking().Skip(skip).Take(take).ToListAsync();
+            
+            var result = posts.Select(post =>
+                new ReturnPostModel
+                {
+                    Id = post.Id,
+                    Caption = post.Caption,
+                    Author = new UserAvatarModel(_mapper.Map<UserModel>(post.Author), post.Author.Avatar == null? null: _linkAvatarGenerator),
+                    PostAttachments = post.PostAttachments?.Select(postAttachment => 
+                        new AttachmentWithLinkModel(_mapper.Map<AttachmentModel>(postAttachment), _linkAttachmentGenerator)).ToList()
+                });
 
-            if (post == null)
-            {
-                throw new Exception("Post not found");
-            }
-
-            return post;
+            return result;
         }
 
-        public async Task<Post> GetPostById(Guid id)
+        public async Task<AttachmentModel> GetPostAttachmentById(Guid postAttachmentId)
         {
-            var post = await _context.Posts.FirstOrDefaultAsync(x => x.Id == id);
+            var attachment = await _context.Attachments.FirstOrDefaultAsync(x => x.Id == postAttachmentId);
 
-            if (post == null)
-            {
-                throw new Exception("Post not found");
-            }
-
-            return post;
+            return _mapper.Map<AttachmentModel>(attachment);
         }
     }
 }

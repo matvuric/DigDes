@@ -40,8 +40,10 @@ namespace Api.Services
         public async Task<Guid> CreateUser(CreateUserModel model)
         {
             var dbUser = _mapper.Map<User>(model);
+
             var userEntity = await _context.Users.AddAsync(dbUser);
             await _context.SaveChangesAsync();
+
             return userEntity.Entity.Id;
         }
 
@@ -55,14 +57,14 @@ namespace Api.Services
         {
             var user = await GetUserById(id);
 
-            return new UserAvatarModel(_mapper.Map<UserModel>(user), _linkGenerator);
+            return new UserAvatarModel(_mapper.Map<UserModel>(user), user.Avatar == null? null: _linkGenerator);
         }
 
         public async Task<User> GetUserById(Guid id)
         {
             var user = await _context.Users.Include(user => user.Avatar).FirstOrDefaultAsync(user => user.Id == id);
 
-            if (user == null)
+            if (user == null || user == default)
             {
                 throw new Exception("User not found");
             }
