@@ -37,6 +37,7 @@ namespace Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        [Route("{userId}")]
         public async Task<FileStreamResult> GetUserAvatar(Guid userId, bool download = false)
         {
             return RenderAttachment(await _userService.GetAvatarById(userId), download);
@@ -44,10 +45,11 @@ namespace Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        [Route("{postAttachmentId}")]
         public async Task<FileStreamResult> GetPostAttachment(Guid postAttachmentId, bool download = false)
         {
             return RenderAttachment(await _postService.GetPostAttachmentById(postAttachmentId), download);
-        } 
+        }
 
         private FileStreamResult RenderAttachment(AttachmentModel attachment, bool download)
         {
@@ -58,10 +60,11 @@ namespace Api.Controllers
             else
             {
                 var fileStream = new FileStream(attachment.FilePath, FileMode.Open);
+                var extension = Path.GetExtension(attachment.Name);
 
                 if (download)
                 {
-                    return File(fileStream, attachment.MimeType, attachment.Name);
+                    return File(fileStream, attachment.MimeType, $"{attachment.Id}{extension}");
                 }
                 else
                 {

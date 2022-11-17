@@ -1,7 +1,6 @@
 ﻿using Api.Models.Attachment;
 using Api.Models.User;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +11,7 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DataContext _context;
-        private Func<UserModel, string?>? _linkGenerator;
+        private Func<Guid, string?>? _linkGenerator;
 
         public UserService(IMapper mapper, DataContext context)
         {
@@ -20,7 +19,7 @@ namespace Api.Services
             _context = context;
         }
 
-        public void SetLinkGenerator(Func<UserModel, string?> linkGenerator)
+        public void SetLinkGenerator(Func<Guid, string?> linkGenerator)
         {
             _linkGenerator = linkGenerator;
         }
@@ -49,15 +48,15 @@ namespace Api.Services
 
         public async Task<IEnumerable<UserAvatarModel>> GetUsers()
         {
-            var users = await _context.Users.AsNoTracking().ProjectTo<UserModel>(_mapper.ConfigurationProvider).ToListAsync();
-            return users.Select(user => new UserAvatarModel(user, _linkGenerator));
+            return (await _context.Users.AsNoTracking().Include(user => user.Avatar).ToListAsync())
+                .Select(user => _mapper.Map<User, UserAvatarModel>(user, opts => opts.AfterMap(FixAvatar)));
         }
 
         public async Task<UserAvatarModel> GetUser(Guid id)
         {
             var user = await GetUserById(id);
 
-            return new UserAvatarModel(_mapper.Map<UserModel>(user), user.Avatar == null? null: _linkGenerator);
+            return _mapper.Map<User, UserAvatarModel>(user, opts => opts.AfterMap(FixAvatar));
         }
 
         public async Task<User> GetUserById(Guid id)
@@ -92,6 +91,11 @@ namespace Api.Services
         {
             var user = await GetUserById(userId);
             return _mapper.Map<AttachmentModel>(user.Avatar);
+        }
+
+        private void FixAvatar(User src, UserAvatarModel dest)
+        {
+            dest.AvatarLink = src.Avatar == null ? null : _linkGenerator?.Invoke(src.Id);
         }
     }
 }

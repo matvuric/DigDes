@@ -11,9 +11,9 @@ namespace Common.Extentions
     {
         public static string? ControllerAction<T>(this IUrlHelper urlHelper, string name, object? arg) where T : ControllerBase
         {
-            var type = typeof(T);
-            var method = type.GetMethod(name);
-            if (method == null)
+            var controllerType = typeof(T);
+            var controllerMethod = controllerType.GetMethod(name);
+            if (controllerMethod == null)
             {
                 return null;
             }

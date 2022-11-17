@@ -1,5 +1,4 @@
-﻿using Api.Models;
-using Api.Models.Attachment;
+﻿using Api.Models.Attachment;
 using Api.Models.Post;
 using Api.Models.User;
 using AutoMapper;
@@ -17,16 +16,22 @@ namespace Api
                 .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate.UtcDateTime));
 
             CreateMap<DAL.Entities.User, UserModel>();
-
             CreateMap<DAL.Entities.User, UserAvatarModel>();
 
             CreateMap<DAL.Entities.Avatar, AttachmentModel>();
 
             CreateMap<DAL.Entities.PostAttachment, AttachmentModel>();
+            CreateMap<DAL.Entities.PostAttachment, AttachmentExternalModel>();
+
+            CreateMap<CreatePostModel, PostModel>();
+
+            CreateMap<MetadataModel, PostAttachmentModel>();
 
             CreateMap<PostAttachmentModel, DAL.Entities.PostAttachment>();
 
-            CreateMap<PostModel, DAL.Entities.Post>();
+            CreateMap<PostModel, DAL.Entities.Post>()
+                .ForMember(dest => dest.PostAttachments, opt => opt.MapFrom(src => src.PostAttachments))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
         }
     }
 }

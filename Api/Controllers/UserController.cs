@@ -19,12 +19,8 @@ namespace Api.Controllers
         {
             _userService = userService;
 
-            _userService.SetLinkGenerator(user =>
-                Url.ControllerAction<AttachmentController>(nameof(AttachmentController.GetUserAvatar), new 
-                { 
-                    userId = user.Id, 
-                    download = false
-                }));
+            _userService.SetLinkGenerator(userId =>
+                Url.ControllerAction<AttachmentController>(nameof(AttachmentController.GetUserAvatar), new { userId }));
         }
 
         [HttpPost]
@@ -60,7 +56,10 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IEnumerable<UserAvatarModel>> GetUsers() => await _userService.GetUsers();
+        public async Task<IEnumerable<UserAvatarModel>> GetUsers()
+        {
+            return await _userService.GetUsers();   
+        }
 
         [HttpGet]
         public async Task<UserModel> GetCurrentUser()
