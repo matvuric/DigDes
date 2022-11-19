@@ -2,7 +2,7 @@
 using Common.Consts;
 using Common.Extentions;
 
-namespace Api.Middlewares.TokenValidator
+namespace Api.Middlewares
 {
     public class TokenValidatorMiddleware
     {
@@ -27,11 +27,18 @@ namespace Api.Middlewares.TokenValidator
                     context.Response.StatusCode = 401;
                 }
             }
-
             if (isOk)
             {
                 await _next(context);
             }
+        }
+    }
+    public static class TokenValidatorMiddlewareExtensions
+    {
+        public static IApplicationBuilder UseTokenValidator(
+            this IApplicationBuilder builder)
+        {
+            return builder.UseMiddleware<TokenValidatorMiddleware>();
         }
     }
 }

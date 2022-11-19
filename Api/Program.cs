@@ -1,5 +1,6 @@
 using Api.Configs;
-using Api.Middlewares.TokenValidator;
+using Api.Mapper;
+using Api.Middlewares;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +54,10 @@ internal class Program
                     new List<string>()
                 }
             });
+
+            options.SwaggerDoc("Auth", new OpenApiInfo { Title = "Auth" });
+            options.SwaggerDoc("Api", new OpenApiInfo { Title = "Api" });
+
         });
 
         builder.Services.AddDbContext<DAL.DataContext>(options =>
@@ -66,6 +71,7 @@ internal class Program
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddTransient<AttachmentService>();
         builder.Services.AddTransient<PostService>();
+        builder.Services.AddScoped<LinkGeneratorService>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
@@ -107,7 +113,11 @@ internal class Program
         // if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("Api/swagger.json", "Api");
+                options.SwaggerEndpoint("Auth/swagger.json", "Auth");
+            });
         }
 
         app.UseHttpsRedirection();
@@ -117,6 +127,8 @@ internal class Program
         app.UseAuthorization();
 
         app.UseTokenValidator();
+
+        app.UseGlobalErrorWrapper();
 
         app.MapControllers();
 

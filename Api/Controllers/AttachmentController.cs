@@ -1,6 +1,7 @@
 ﻿using Api.Models.Attachment;
 using Api.Services;
 using Common.Consts;
+using Common.Exceptions;
 using Common.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ namespace Api.Controllers
     [Route("api/[controller]/[action]")]
     [ApiController]
     [Authorize]
+    [ApiExplorerSettings(GroupName = "Api")]
     public class AttachmentController : ControllerBase
     {
         private readonly AttachmentService _attachmentService;
@@ -55,7 +57,7 @@ namespace Api.Controllers
         {
             if (attachment == null)
             {
-                throw new Exception("Attachment not found");
+                throw new AttachmentNotFoundException();
             }
             else
             {

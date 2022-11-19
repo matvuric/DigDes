@@ -1,6 +1,7 @@
 ﻿using Api.Models.Attachment;
 using Api.Models.User;
 using AutoMapper;
+using Common.Exceptions;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -11,17 +12,11 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DataContext _context;
-        private Func<Guid, string?>? _linkGenerator;
 
         public UserService(IMapper mapper, DataContext context)
         {
             _mapper = mapper;
             _context = context;
-        }
-
-        public void SetLinkGenerator(Func<Guid, string?> linkGenerator)
-        {
-            _linkGenerator = linkGenerator;
         }
 
         public async Task<bool> CheckUserExist(string email)
@@ -48,24 +43,25 @@ namespace Api.Services
 
         public async Task<IEnumerable<UserAvatarModel>> GetUsers()
         {
-            return (await _context.Users.AsNoTracking().Include(user => user.Avatar).ToListAsync())
-                .Select(user => _mapper.Map<User, UserAvatarModel>(user, opts => opts.AfterMap(FixAvatar)));
+            return await _context.Users.AsNoTracking().Include(user => user.Avatar).Include(user => user.Posts)
+                .Select(user => _mapper.Map<UserAvatarModel>(user)).ToListAsync();
         }
 
         public async Task<UserAvatarModel> GetUser(Guid id)
         {
             var user = await GetUserById(id);
 
-            return _mapper.Map<User, UserAvatarModel>(user, opts => opts.AfterMap(FixAvatar));
+            return _mapper.Map<User, UserAvatarModel>(user);
         }
 
         public async Task<User> GetUserById(Guid id)
         {
-            var user = await _context.Users.Include(user => user.Avatar).FirstOrDefaultAsync(user => user.Id == id);
+            var user = await _context.Users.Include(user => user.Avatar)
+                .Include(user=> user.Posts).FirstOrDefaultAsync(user => user.Id == id);
 
             if (user == null || user == default)
             {
-                throw new Exception("User not found");
+                throw new UserNotFoundException();
             }
 
             return user;
@@ -91,11 +87,6 @@ namespace Api.Services
         {
             var user = await GetUserById(userId);
             return _mapper.Map<AttachmentModel>(user.Avatar);
-        }
-
-        private void FixAvatar(User src, UserAvatarModel dest)
-        {
-            dest.AvatarLink = src.Avatar == null ? null : _linkGenerator?.Invoke(src.Id);
         }
     }
 }

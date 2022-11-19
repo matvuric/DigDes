@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using DAL.Entities;
 using Api.Models.Token;
+using Common.Exceptions;
 
 namespace Api.Services
 {
@@ -41,7 +42,7 @@ namespace Api.Services
             var session = await _context.UserSessions.FirstOrDefaultAsync(userSession => userSession.Id == id);
             if (session == null)
             {
-                throw new Exception("Session is not found");
+                throw new SessionNotFoundException();
             }
 
             return session;
@@ -88,11 +89,11 @@ namespace Api.Services
 
         private async Task<User> GetUserByCredentials(string login, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == login.ToLower());
+            var user = await _context.Users.FirstOrDefaultAsync(user => user.Email.ToLower() == login.ToLower());
 
             if (user == null)
             {
-                throw new Exception("User not found");
+                throw new UserNotFoundException();
             }
 
             if (!HashHelper.Verify(password, user.PasswordHash))
@@ -109,7 +110,7 @@ namespace Api.Services
 
             if (session.User == null)
             {
-                throw new Exception("User does not exist");
+                throw new UserNotFoundException();
             }
 
             var jwt = new JwtSecurityToken(
@@ -143,11 +144,11 @@ namespace Api.Services
 
         private async Task<UserSession> GetSessionByRefreshToken(Guid id)
         {
-            var session = await _context.UserSessions.Include(x => x.User)
+            var session = await _context.UserSessions.Include(session => session.User)
                 .FirstOrDefaultAsync(userSession => userSession.RefreshToken == id);
             if (session == null)
             {
-                throw new Exception("Session is not found");
+                throw new SessionNotFoundException();
             }
 
             return session;

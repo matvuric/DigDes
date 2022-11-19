@@ -2,25 +2,31 @@
 using Api.Models.User;
 using Api.Services;
 using Common.Consts;
+using Common.Exceptions;
 using Common.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using FileNotFoundException = Common.Exceptions.FileNotFoundException;
 
 namespace Api.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
     [Authorize]
+    [ApiExplorerSettings(GroupName = "Api")]
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
 
-        public UserController(UserService userService)
+        public UserController(UserService userService, LinkGeneratorService linkGeneratorService)
         {
             _userService = userService;
 
-            _userService.SetLinkGenerator(userId =>
-                Url.ControllerAction<AttachmentController>(nameof(AttachmentController.GetUserAvatar), new { userId }));
+            linkGeneratorService.LinkAvatarGenerator = userId => 
+                Url.ControllerAction<AttachmentController>(nameof(AttachmentController.GetUserAvatar), new
+                    {
+                        userId
+                    });
         }
 
         [HttpPost]
@@ -30,14 +36,14 @@ namespace Api.Controllers
 
             if (userId == default)
             {
-                throw new Exception("You are not authorized");
+                throw new UnauthorizedException();
             }
             else
             {
                 var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), model.TempId.ToString()));
                 if (!tempFileInfo.Exists)
                 {
-                    throw new Exception("File not found");
+                    throw new FileNotFoundException();
                 }
                 else
                 {
@@ -68,12 +74,18 @@ namespace Api.Controllers
 
             if (userId == default)
             {
-                throw new Exception("You are not authorized");
+                throw new UnauthorizedException();
             }
             else
             {
                 return await _userService.GetUser(userId);
             }
+        }
+
+        [HttpGet]
+        public async Task<UserAvatarModel> GetUserById(Guid userId)
+        {
+            return await _userService.GetUser(userId);
         }
     }
 }
