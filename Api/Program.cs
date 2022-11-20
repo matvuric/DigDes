@@ -72,6 +72,7 @@ internal class Program
         builder.Services.AddTransient<AttachmentService>();
         builder.Services.AddTransient<PostService>();
         builder.Services.AddScoped<LinkGeneratorService>();
+        builder.Services.AddSingleton<DdosGuard>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
@@ -124,12 +125,14 @@ internal class Program
 
         app.UseAuthentication();
 
+        app.UserAntiDdosCustom();
+
         app.UseAuthorization();
 
         app.UseTokenValidator();
 
         app.UseGlobalErrorWrapper();
-
+        
         app.MapControllers();
 
         app.Run();

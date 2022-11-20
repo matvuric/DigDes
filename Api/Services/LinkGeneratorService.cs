@@ -14,7 +14,12 @@ namespace Api.Services
             dest.AvatarLink = src.Avatar == null ? null : LinkAvatarGenerator?.Invoke(src.Id);
         }
 
-        public void FixAttachment(PostAttachment src, AttachmentExternalModel dest)
+        public void FixPostAttachment(PostAttachment src, AttachmentExternalModel dest)
+        {
+            dest.AttachmentLink = LinkAttachmentGenerator?.Invoke(src.Id);
+        }
+
+        public void FixPostCommentAttachment(PostCommentAttachment src, AttachmentExternalModel dest)
         {
             dest.AttachmentLink = LinkAttachmentGenerator?.Invoke(src.Id);
         }

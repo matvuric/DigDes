@@ -53,6 +53,14 @@ namespace Api.Controllers
             return RenderAttachment(await _postService.GetPostAttachmentById(postAttachmentId), download);
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("{postCommentAttachmentId}")]
+        public async Task<FileStreamResult> GetPostCommentAttachment(Guid postCommentAttachmentId, bool download = false)
+        {
+            return RenderAttachment(await _postService.GetPostCommentAttachmentById(postCommentAttachmentId), download);
+        }
+
         private FileStreamResult RenderAttachment(AttachmentModel attachment, bool download)
         {
             if (attachment == null)

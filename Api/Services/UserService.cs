@@ -43,7 +43,9 @@ namespace Api.Services
 
         public async Task<IEnumerable<UserAvatarModel>> GetUsers()
         {
-            return await _context.Users.AsNoTracking().Include(user => user.Avatar).Include(user => user.Posts)
+            return await _context.Users.AsNoTracking()
+                .Include(user => user.Avatar)
+                .Include(user => user.Posts)
                 .Select(user => _mapper.Map<UserAvatarModel>(user)).ToListAsync();
         }
 

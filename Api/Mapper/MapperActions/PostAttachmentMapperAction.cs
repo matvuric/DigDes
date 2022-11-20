@@ -16,7 +16,7 @@ namespace Api.Mapper.MapperActions
 
         public void Process(PostAttachment source, AttachmentExternalModel destination, ResolutionContext context)
         {
-            _linkGeneratorService.FixAttachment(source, destination);
+            _linkGeneratorService.FixPostAttachment(source, destination);
         }
     }
 }

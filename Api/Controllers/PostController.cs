@@ -1,4 +1,5 @@
 ﻿using Api.Models.Post;
+using Api.Models.PostComment;
 using Api.Services;
 using Common.Consts;
 using Common.Exceptions;
@@ -61,16 +62,69 @@ namespace Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        public async Task<IEnumerable<ReturnPostWithCommentsModel>> GetPostsWithComments(int skip, int take = 10)
+        {
+            return await _postService.GetPostsWithComments(skip, take);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
         public async Task<ReturnPostModel> GetPostById(Guid postId)
         {
             return await _postService.GetPost(postId);
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IEnumerable<ReturnPostModel>> GetCurrentUserPosts(int skip, int take = 10)
         {
             return await _postService.GetCurrentUserPosts(User.GetClaimValue<Guid>(ClaimNames.Id), skip, take);
+        }
+
+        [HttpPost]
+        public async Task<Guid> CreatePostComment(CreatePostCommentModel model)
+        {
+            if (!model.AuthorId.HasValue)
+            {
+                var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+
+                if (userId == default)
+                {
+                    throw new UnauthorizedException();
+                }
+                else
+                {
+                    model.AuthorId = userId;
+                }
+            }
+
+            return await _postService.CreatePostComment(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IEnumerable<ReturnPostCommentModel>> GetPostComments(int skip, int take = 10)
+        {
+            return await _postService.GetPostComments(skip, take);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<ReturnPostCommentModel> GetPostCommentById(Guid postCommentId)
+        {
+            return await _postService.GetPostComment(postCommentId);
+        }
+
+        [HttpGet]
+        public async Task<IEnumerable<ReturnPostCommentModel>> GetCurrentUserPostComments(int skip, int take = 10)
+        {
+            return await _postService.GetCurrentUserPostComments(User.GetClaimValue<Guid>(ClaimNames.Id), skip, take);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IEnumerable<ReturnPostCommentModel>> GetPostCommentsById(Guid postId, int skip, int take = 10)
+        {
+            return await _postService.GetPostCommentsById(postId, skip, take);
         }
     }
 }

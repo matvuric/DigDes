@@ -15,6 +15,7 @@ namespace DAL
             modelBuilder.Entity<User>().HasIndex(f => f.Email).IsUnique();
             modelBuilder.Entity<Avatar>().ToTable(nameof(Avatars));
             modelBuilder.Entity<PostAttachment>().ToTable(nameof(PostAttachments));
+            modelBuilder.Entity<PostCommentAttachment>().ToTable(nameof(PostCommentAttachments));
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -27,5 +28,6 @@ namespace DAL
         public DbSet<Post> Posts => Set<Post>();
         public DbSet<PostAttachment> PostAttachments => Set<PostAttachment>();
         public DbSet<PostComment> PostComments => Set<PostComment>();
+        public DbSet<PostCommentAttachment> PostCommentAttachments => Set<PostCommentAttachment>();
     }
 }

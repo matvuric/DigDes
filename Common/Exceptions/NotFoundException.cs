@@ -14,11 +14,20 @@
             Model = "User";
         }
     }
+
     public class PostNotFoundException : NotFoundException
     {
         public PostNotFoundException()
         {
             Model = "Post";
+        }
+    }
+
+    public class PostCommentNotFoundException : NotFoundException
+    {
+        public PostCommentNotFoundException()
+        {
+            Model = "PostComment";
         }
     }
 

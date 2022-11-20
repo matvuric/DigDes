@@ -1,14 +1,13 @@
 ﻿using Api.Models.Attachment;
 using Api.Models.User;
 
-namespace Api.Models.Post
+namespace Api.Models.PostComment
 {
-    public class ReturnPostModel
+    public class ReturnPostCommentModel
     {
         public Guid Id { get; set; }
         public string? Caption { get; set; }
         public UserAvatarModel Author { get; set; } = null!;
-        public List<AttachmentExternalModel>? PostAttachments { get; set; }
-        public int CommentsCount { get; set; }
+        public List<AttachmentExternalModel>? PostCommentAttachments { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Api.Mapper.MapperActions;
 using Api.Models.Attachment;
 using Api.Models.Post;
+using Api.Models.PostComment;
 using Api.Models.User;
 using AutoMapper;
 using Common;
@@ -30,14 +31,29 @@ namespace Api.Mapper
             CreateMap<CreatePostModel, PostModel>();
 
             CreateMap<MetadataModel, PostAttachmentModel>();
+            CreateMap<MetadataModel, PostCommentAttachmentModel>();
 
             CreateMap<PostAttachmentModel, PostAttachment>();
 
             CreateMap<PostModel, Post>()
-                .ForMember(dest => dest.PostAttachments, opt => opt.MapFrom(src => src.PostAttachments))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            CreateMap<Post, ReturnPostModel>();
+            CreateMap<Post, ReturnPostModel>()
+                .ForMember(dest => dest.CommentsCount, opt => opt.MapFrom(src => src.Comments!.Count));
+            CreateMap<Post, ReturnPostWithCommentsModel>()
+                .ForMember(dest => dest.PostComments, opt => opt.MapFrom(src => src.Comments));
+
+            CreateMap<PostCommentAttachment, AttachmentModel>();
+            CreateMap<PostCommentAttachment, AttachmentExternalModel>().AfterMap<PostCommentAttachmentMapperAction>();
+
+            CreateMap<CreatePostCommentModel, PostCommentModel>();
+
+            CreateMap<PostCommentAttachmentModel, PostCommentAttachment>();
+
+            CreateMap<PostCommentModel, PostComment>()
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            CreateMap<PostComment, ReturnPostCommentModel>();
         }
     }
 }
