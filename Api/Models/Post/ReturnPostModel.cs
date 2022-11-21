@@ -10,5 +10,7 @@ namespace Api.Models.Post
         public UserAvatarModel Author { get; set; } = null!;
         public List<AttachmentExternalModel>? PostAttachments { get; set; }
         public int CommentsCount { get; set; }
+        public int LikesCount { get; set; }
+        public int DislikesCount { get; set; }
     }
 }

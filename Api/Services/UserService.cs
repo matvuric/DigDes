@@ -19,18 +19,6 @@ namespace Api.Services
             _context = context;
         }
 
-        public async Task<bool> CheckUserExist(string email)
-        {
-            return await _context.Users.AnyAsync(user => user.Email.ToLower() == email.ToLower());
-        }
-
-        public async Task DeleteUser(Guid userId)
-        {
-            var dbUser = await GetUserById(userId);
-            _context.Users.Remove(dbUser);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task<Guid> CreateUser(CreateUserModel model)
         {
             var dbUser = _mapper.Map<User>(model);
@@ -41,11 +29,17 @@ namespace Api.Services
             return userEntity.Entity.Id;
         }
 
+        /*public async Task EditProfile(EditUserProfileModel model, Guid userId)
+        {
+            var user = await GetUserById(userId);
+        }*/
+
         public async Task<IEnumerable<UserAvatarModel>> GetUsers()
         {
             return await _context.Users.AsNoTracking()
                 .Include(user => user.Avatar)
                 .Include(user => user.Posts)
+                .Include(user => user.Likes)
                 .Select(user => _mapper.Map<UserAvatarModel>(user)).ToListAsync();
         }
 
@@ -56,10 +50,15 @@ namespace Api.Services
             return _mapper.Map<User, UserAvatarModel>(user);
         }
 
-        public async Task<User> GetUserById(Guid id)
+        public async Task<User> GetUserById(Guid? id)
         {
-            var user = await _context.Users.Include(user => user.Avatar)
-                .Include(user=> user.Posts).FirstOrDefaultAsync(user => user.Id == id);
+            var user = await _context.Users
+                .Include(user => user.Avatar)
+                .Include(user => user.Posts)
+                .Include(user => user.Likes)
+                .Include(user => user.Followers)
+                .Include(user => user.Following)
+                .FirstOrDefaultAsync(user => user.Id == id);
 
             if (user == null || user == default)
             {
@@ -89,6 +88,18 @@ namespace Api.Services
         {
             var user = await GetUserById(userId);
             return _mapper.Map<AttachmentModel>(user.Avatar);
+        }
+
+        public async Task<bool> CheckUserExist(string email)
+        {
+            return await _context.Users.AnyAsync(user => user.Email.ToLower() == email.ToLower());
+        }
+
+        public async Task DeleteUser(Guid userId)
+        {
+            var dbUser = await GetUserById(userId);
+            _context.Users.Remove(dbUser);
+            await _context.SaveChangesAsync();
         }
     }
 }

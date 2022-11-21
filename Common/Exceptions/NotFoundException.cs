@@ -54,4 +54,12 @@
             Model = "Session";
         }
     }
+
+    public class LikeNotFoundException : NotFoundException
+    {
+        public LikeNotFoundException()
+        {
+            Model = "Like";
+        }
+    }
 }

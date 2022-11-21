@@ -17,12 +17,14 @@ namespace Api.Controllers
         private readonly AttachmentService _attachmentService;
         private readonly UserService _userService;
         private readonly PostService _postService;
+        private readonly PostCommentService _postCommentService;
 
-        public AttachmentController(AttachmentService attachmentService, UserService userService, PostService postService)
+        public AttachmentController(AttachmentService attachmentService, UserService userService, PostService postService, PostCommentService postCommentService)
         {
             _attachmentService = attachmentService;
             _userService = userService;
             _postService = postService;
+            _postCommentService = postCommentService;
         }
 
         [HttpPost]
@@ -58,7 +60,7 @@ namespace Api.Controllers
         [Route("{postCommentAttachmentId}")]
         public async Task<FileStreamResult> GetPostCommentAttachment(Guid postCommentAttachmentId, bool download = false)
         {
-            return RenderAttachment(await _postService.GetPostCommentAttachmentById(postCommentAttachmentId), download);
+            return RenderAttachment(await _postCommentService.GetPostCommentAttachmentById(postCommentAttachmentId), download);
         }
 
         private FileStreamResult RenderAttachment(AttachmentModel attachment, bool download)

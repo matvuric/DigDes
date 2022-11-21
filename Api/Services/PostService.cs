@@ -1,6 +1,5 @@
 ﻿using Api.Models.Attachment;
 using Api.Models.Post;
-using Api.Models.PostComment;
 using AutoMapper;
 using Common.Exceptions;
 using DAL;
@@ -13,11 +12,13 @@ namespace Api.Services
     {
         private readonly DataContext _context;
         private readonly IMapper _mapper;
+        private readonly UserService _userService;
 
-        public PostService(DataContext context, IMapper mapper)
+        public PostService(DataContext context, IMapper mapper, UserService userService)
         {
             _context = context;
             _mapper = mapper;
+            _userService = userService;
         }
 
         public async Task<Guid> CreatePost(CreatePostModel createModel)
@@ -63,21 +64,9 @@ namespace Api.Services
                 .Include(post => post.Author).ThenInclude(user => user.Avatar)
                 .Include(post => post.PostAttachments)
                 .Include(post => post.Comments)
+                .Include(post => post.Likes)
                 .OrderByDescending(post => post.CreatedDate).Skip(skip).Take(take)
                 .Select(post => _mapper.Map<ReturnPostModel>(post)).ToListAsync();
-
-            return posts;
-        }
-
-        public async Task<List<ReturnPostWithCommentsModel>> GetPostsWithComments(int skip, int take)
-        {
-            var posts = await _context.Posts.AsNoTracking()
-                .Include(post => post.Author).ThenInclude(user => user.Avatar)
-                .Include(post => post.PostAttachments)
-                .Include(post => post.Comments)!.ThenInclude(postComment => postComment.PostCommentAttachments)
-                .Include(post => post.Comments)!.ThenInclude(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .OrderByDescending(post => post.CreatedDate).Skip(skip).Take(take)
-                .Select(post => _mapper.Map<ReturnPostWithCommentsModel>(post)).ToListAsync();
 
             return posts;
         }
@@ -89,6 +78,13 @@ namespace Api.Services
             return _mapper.Map<ReturnPostModel>(post);
         }
 
+        public async Task<ReturnPostWithCommentsModel> GetPostWithComments(Guid postId)
+        {
+            var post = await GetPostById(postId);
+
+            return _mapper.Map<ReturnPostWithCommentsModel>(post);
+        }
+
         public async Task<Post> GetPostById(Guid id)
         {
             var post = await _context.Posts
@@ -96,6 +92,8 @@ namespace Api.Services
                 .Include(post => post.PostAttachments)
                 .Include(post => post.Comments)!.ThenInclude(postComment => postComment.PostCommentAttachments)
                 .Include(post => post.Comments)!.ThenInclude(postComment => postComment.Author).ThenInclude(user => user.Avatar)
+                .Include(post => post.Comments)!.ThenInclude(postComment => postComment.Likes)
+                .Include(post => post.Likes)
                 .FirstOrDefaultAsync(post => post.Id == id);
 
             if (post == null || post == default)
@@ -113,8 +111,31 @@ namespace Api.Services
                 .Include(post => post.Author).ThenInclude(user => user.Avatar)
                 .Include(post => post.PostAttachments)
                 .Include(post => post.Comments)
+                .Include(post => post.Likes)
                 .OrderByDescending(post => post.CreatedDate).Skip(skip).Take(take)
                 .Select(post => _mapper.Map<ReturnPostModel>(post)).ToListAsync();
+
+            return posts;
+        }
+
+        public async Task<List<ReturnPostModel>> GetUserFollowingPosts(Guid userId, int skip, int take)
+        {
+            var user = await _context.Users
+                .Include(user => user.Following)!.ThenInclude(rel => rel.FollowingUser).ThenInclude(user => user!.Posts)!.ThenInclude(post => post.PostAttachments)
+                .Include(user => user.Following)!.ThenInclude(rel => rel.FollowingUser).ThenInclude(user => user!.Posts)!.ThenInclude(post => post.Comments)
+                .Include(user => user.Following)!.ThenInclude(rel => rel.FollowingUser).ThenInclude(user => user!.Posts)!.ThenInclude(post => post.Likes)
+                .FirstOrDefaultAsync(user => user.Id == userId);
+
+            var a = user!.Following;
+            var posts = new List<ReturnPostModel>();
+            foreach (var u in a)
+            {
+                var followingPosts = u.FollowingUser!.Posts;
+                foreach (var post in followingPosts!)
+                {
+                    posts.Add(_mapper.Map<ReturnPostModel>(post));
+                }
+            }
 
             return posts;
         }
@@ -125,112 +146,6 @@ namespace Api.Services
                 .FirstOrDefaultAsync(attachment => attachment.Id == postAttachmentId);
 
             return _mapper.Map<AttachmentModel>(attachment);
-        }
-
-        public async Task<AttachmentModel> GetPostCommentAttachmentById(Guid postCommentAttachmentId)
-        {
-            var attachment = await _context.Attachments
-                .FirstOrDefaultAsync(attachment => attachment.Id == postCommentAttachmentId);
-
-            return _mapper.Map<AttachmentModel>(attachment);
-        }
-
-        public async Task<Guid> CreatePostComment(CreatePostCommentModel createModel)
-        {
-            var postCommentModel = _mapper.Map<PostCommentModel>(createModel);
-            postCommentModel.PostCommentAttachments?.ForEach(attachmentModel =>
-            {
-                attachmentModel.AuthorId = postCommentModel.AuthorId;
-                attachmentModel.FilePath = Path.Combine(Directory.GetCurrentDirectory(),
-                    "Attachments", attachmentModel.TempId.ToString());
-
-                var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(),
-                    attachmentModel.TempId.ToString()));
-
-                if (!tempFileInfo.Exists)
-                {
-                    throw new Common.Exceptions.FileNotFoundException();
-                }
-                else
-                {
-                    var destFileInfo = new FileInfo(attachmentModel.FilePath);
-
-                    if (destFileInfo.Directory != null && !destFileInfo.Directory.Exists)
-                    {
-                        destFileInfo.Directory.Create();
-                    }
-
-                    File.Move(tempFileInfo.FullName, attachmentModel.FilePath, true);
-                }
-            });
-
-            var dbPostComment = _mapper.Map<PostComment>(postCommentModel);
-
-            var postCommentEntity = await _context.PostComments.AddAsync(dbPostComment);
-            await _context.SaveChangesAsync();
-
-            return postCommentEntity.Entity.Id;
-        }
-
-        public async Task<List<ReturnPostCommentModel>> GetPostComments(int skip, int take)
-        {
-            var postComments = await _context.PostComments.AsNoTracking()
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .OrderByDescending(postComment => postComment.CreatedDate).Skip(skip).Take(take)
-                .Select(postComment => _mapper.Map<ReturnPostCommentModel>(postComment)).ToListAsync();
-
-            return postComments;
-        }
-
-        public async Task<ReturnPostCommentModel> GetPostComment(Guid postCommentId)
-        {
-            var postComment = await GetPostCommentById(postCommentId);
-
-            return _mapper.Map<ReturnPostCommentModel>(postComment);
-        }
-
-        public async Task<PostComment> GetPostCommentById(Guid id)
-        {
-            var postComment = await _context.PostComments
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .FirstOrDefaultAsync(postComment => postComment.Id == id);
-
-            if (postComment == null || postComment == default)
-            {
-                throw new PostCommentNotFoundException();
-            }
-
-            return postComment;
-        }
-
-        public async Task<List<ReturnPostCommentModel>> GetCurrentUserPostComments(Guid userId, int skip, int take)
-        {
-            var postComments = await _context.PostComments.AsNoTracking()
-                .Where(postComment => postComment.AuthorId == userId)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .OrderByDescending(postComment => postComment.CreatedDate).Skip(skip).Take(take)
-                .Select(postComment => _mapper.Map<ReturnPostCommentModel>(postComment)).ToListAsync();
-
-            return postComments;
-        }
-
-        public async Task<List<ReturnPostCommentModel>> GetPostCommentsById(Guid postId, int skip, int take)
-        {
-            var postComments = await _context.PostComments.AsNoTracking()
-                .Where(postComment => postComment.PostId == postId)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .OrderByDescending(postComment => postComment.CreatedDate).Skip(skip).Take(take)
-                .Select(postComment => _mapper.Map<ReturnPostCommentModel>(postComment)).ToListAsync();
-
-            return postComments;
         }
     }
 }

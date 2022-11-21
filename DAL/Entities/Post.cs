@@ -10,5 +10,6 @@
         public virtual User Author { get; set; } = null!;
         public virtual ICollection<PostAttachment>? PostAttachments { get; set; }
         public virtual ICollection<PostComment>? Comments { get; set; }
+        public virtual ICollection<PostLike>? Likes { get; set; }
     }
 }

@@ -12,10 +12,26 @@ namespace DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>().HasIndex(f => f.Email).IsUnique();
+            modelBuilder.Entity<User>()
+                .HasIndex(x => x.Email).IsUnique();
+            modelBuilder.Entity<User>()
+                .HasIndex(x => x.Username).IsUnique();
             modelBuilder.Entity<Avatar>().ToTable(nameof(Avatars));
             modelBuilder.Entity<PostAttachment>().ToTable(nameof(PostAttachments));
             modelBuilder.Entity<PostCommentAttachment>().ToTable(nameof(PostCommentAttachments));
+            modelBuilder.Entity<PostLike>().ToTable(nameof(PostLikes));
+            modelBuilder.Entity<PostCommentLike>().ToTable(nameof(PostCommentLikes));
+            
+            modelBuilder.Entity<Relation>()
+                .HasKey(x => new { x.FollowerId, x.FollowingId });
+            modelBuilder.Entity<Relation>()
+                .HasOne(x => x.FollowerUser)
+                .WithMany(x => x.Following)
+                .HasForeignKey(x => x.FollowerId);
+            modelBuilder.Entity<Relation>()
+                .HasOne(x => x.FollowingUser)
+                .WithMany(x => x.Followers)
+                .HasForeignKey(x => x.FollowingId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -29,5 +45,8 @@ namespace DAL
         public DbSet<PostAttachment> PostAttachments => Set<PostAttachment>();
         public DbSet<PostComment> PostComments => Set<PostComment>();
         public DbSet<PostCommentAttachment> PostCommentAttachments => Set<PostCommentAttachment>();
+        public DbSet<Like> Likes => Set<Like>();
+        public DbSet<PostLike> PostLikes => Set<PostLike>();
+        public DbSet<PostCommentLike> PostCommentLikes => Set<PostCommentLike>();
     }
 }

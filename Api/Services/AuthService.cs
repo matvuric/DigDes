@@ -89,7 +89,11 @@ namespace Api.Services
 
         private async Task<User> GetUserByCredentials(string login, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(user => user.Email.ToLower() == login.ToLower());
+            var lowLogin = login.ToLower();
+            var user = await _context.Users.FirstOrDefaultAsync(user =>
+                user.Email.ToLower() == lowLogin || 
+                user.Username.ToLower() == lowLogin || 
+                user.Phone == lowLogin);
 
             if (user == null)
             {
@@ -119,7 +123,7 @@ namespace Api.Services
                 notBefore: dtNow,
                 claims: new[]
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, session.User.Name),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, session.User.Username),
                     new Claim("id", session.User.Id.ToString()),
                     new Claim("sessionId", session.Id.ToString()),
                 },

@@ -1,5 +1,7 @@
 ﻿using Api.Mapper.MapperActions;
 using Api.Models.Attachment;
+using Api.Models.Follow;
+using Api.Models.Like;
 using Api.Models.Post;
 using Api.Models.PostComment;
 using Api.Models.User;
@@ -21,6 +23,8 @@ namespace Api.Mapper
             CreateMap<User, UserModel>();
             CreateMap<User, UserAvatarModel>()
                 .ForMember(dest => dest.PostsCount, opt => opt.MapFrom(src => src.Posts!.Count))
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)))
                 .AfterMap<UserAvatarMapperAction>();
 
             CreateMap<Avatar, AttachmentModel>();
@@ -39,9 +43,14 @@ namespace Api.Mapper
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<Post, ReturnPostModel>()
-                .ForMember(dest => dest.CommentsCount, opt => opt.MapFrom(src => src.Comments!.Count));
+                .ForMember(dest => dest.CommentsCount, opt => opt.MapFrom(src => src.Comments!.Count))
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)));
+
             CreateMap<Post, ReturnPostWithCommentsModel>()
-                .ForMember(dest => dest.PostComments, opt => opt.MapFrom(src => src.Comments));
+                .ForMember(dest => dest.PostComments, opt => opt.MapFrom(src => src.Comments))
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)));
 
             CreateMap<PostCommentAttachment, AttachmentModel>();
             CreateMap<PostCommentAttachment, AttachmentExternalModel>().AfterMap<PostCommentAttachmentMapperAction>();
@@ -53,7 +62,15 @@ namespace Api.Mapper
             CreateMap<PostCommentModel, PostComment>()
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            CreateMap<PostComment, ReturnPostCommentModel>();
+            CreateMap<PostComment, ReturnPostCommentModel>()
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)));
+
+            CreateMap<PostLikeModel, PostLike>();
+            CreateMap<PostCommentLikeModel, PostCommentLike>();
+
+            CreateMap<FollowModel, Relation>()
+                .ForMember(dest => dest.FollowDate, opt => opt.MapFrom(src => DateTime.UtcNow));
         }
     }
 }

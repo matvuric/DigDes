@@ -70,7 +70,10 @@ internal class Program
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddTransient<AttachmentService>();
-        builder.Services.AddTransient<PostService>();
+        builder.Services.AddScoped<PostService>();
+        builder.Services.AddScoped<PostCommentService>();
+        builder.Services.AddScoped<LikeService>();
+        builder.Services.AddScoped<FollowService>();
         builder.Services.AddScoped<LinkGeneratorService>();
         builder.Services.AddSingleton<DdosGuard>();
 
