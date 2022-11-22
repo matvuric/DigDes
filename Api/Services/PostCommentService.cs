@@ -12,60 +12,41 @@ namespace Api.Services
     {
         private readonly DataContext _context;
         private readonly IMapper _mapper;
+        private readonly AttachmentService _attachmentService;
 
-        public PostCommentService(DataContext context, IMapper mapper)
+        public PostCommentService(DataContext context, IMapper mapper, AttachmentService attachmentService)
         {
             _context = context;
             _mapper = mapper;
+            _attachmentService = attachmentService;
         }
 
-        public async Task<Guid> CreatePostComment(CreatePostCommentModel createModel)
+        public async Task CreatePostComment(CreatePostCommentModel createModel)
         {
             var postCommentModel = _mapper.Map<PostCommentModel>(createModel);
-            postCommentModel.PostCommentAttachments?.ForEach(attachmentModel =>
+            postCommentModel.PostCommentAttachments?.ForEach(model =>
             {
-                attachmentModel.AuthorId = postCommentModel.AuthorId;
-                attachmentModel.FilePath = Path.Combine(Directory.GetCurrentDirectory(),
-                    "Attachments", attachmentModel.TempId.ToString());
-
-                var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(),
-                    attachmentModel.TempId.ToString()));
-
-                if (!tempFileInfo.Exists)
-                {
-                    throw new Common.Exceptions.FileNotFoundException();
-                }
-                else
-                {
-                    var destFileInfo = new FileInfo(attachmentModel.FilePath);
-
-                    if (destFileInfo.Directory != null && !destFileInfo.Directory.Exists)
-                    {
-                        destFileInfo.Directory.Create();
-                    }
-
-                    File.Move(tempFileInfo.FullName, attachmentModel.FilePath, true);
-                }
+                model.AuthorId = postCommentModel.AuthorId;
+                model.FilePath = Path.Combine(Directory.GetCurrentDirectory(),
+                    "Attachments", model.TempId.ToString());
+                _attachmentService.MoveFile(model);
             });
 
             var dbPostComment = _mapper.Map<PostComment>(postCommentModel);
-
-            var postCommentEntity = await _context.PostComments.AddAsync(dbPostComment);
+            await _context.PostComments.AddAsync(dbPostComment);
             await _context.SaveChangesAsync();
-
-            return postCommentEntity.Entity.Id;
         }
 
         public async Task<List<ReturnPostCommentModel>> GetPostComments(int skip, int take)
         {
             var postComments = await _context.PostComments.AsNoTracking()
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Likes)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .Include(postComment => postComment.Likes)
-                .OrderByDescending(postComment => postComment.CreatedDate).Skip(skip).Take(take)
-                .Select(postComment => _mapper.Map<ReturnPostCommentModel>(postComment)).ToListAsync();
+                .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
+                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
+                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.PostCommentAttachments)
+                .Include(comm => comm.Likes)
+                .OrderByDescending(comm => comm.CreatedDate).Skip(skip).Take(take)
+                .Select(comm => _mapper.Map<ReturnPostCommentModel>(comm)).ToListAsync();
 
             return postComments;
         }
@@ -80,14 +61,14 @@ namespace Api.Services
         public async Task<PostComment> GetPostCommentById(Guid id)
         {
             var postComment = await _context.PostComments
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Likes)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .Include(postComment => postComment.Likes)
-                .FirstOrDefaultAsync(postComment => postComment.Id == id);
+                .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
+                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
+                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.PostCommentAttachments)
+                .Include(comm => comm.Likes)
+                .FirstOrDefaultAsync(comm => comm.Id == id);
 
-            if (postComment == null || postComment == default)
+            if (postComment == null)
             {
                 throw new PostCommentNotFoundException();
             }
@@ -98,14 +79,14 @@ namespace Api.Services
         public async Task<List<ReturnPostCommentModel>> GetCurrentUserPostComments(Guid userId, int skip, int take)
         {
             var postComments = await _context.PostComments.AsNoTracking()
-                .Where(postComment => postComment.AuthorId == userId)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Likes)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .Include(postComment => postComment.Likes)
-                .OrderByDescending(postComment => postComment.CreatedDate).Skip(skip).Take(take)
-                .Select(postComment => _mapper.Map<ReturnPostCommentModel>(postComment)).ToListAsync();
+                .Where(comm => comm.AuthorId == userId)
+                .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
+                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
+                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.PostCommentAttachments)
+                .Include(comm => comm.Likes)
+                .OrderByDescending(comm => comm.CreatedDate).Skip(skip).Take(take)
+                .Select(comm => _mapper.Map<ReturnPostCommentModel>(comm)).ToListAsync();
 
             return postComments;
         }
@@ -113,14 +94,14 @@ namespace Api.Services
         public async Task<List<ReturnPostCommentModel>> GetPostCommentsByPostId(Guid postId, int skip, int take)
         {
             var postComments = await _context.PostComments.AsNoTracking()
-                .Where(postComment => postComment.PostId == postId)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Avatar)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Posts)
-                .Include(postComment => postComment.Author).ThenInclude(user => user.Likes)
-                .Include(postComment => postComment.PostCommentAttachments)
-                .Include(postComment => postComment.Likes)
-                .OrderByDescending(postComment => postComment.CreatedDate).Skip(skip).Take(take)
-                .Select(postComment => _mapper.Map<ReturnPostCommentModel>(postComment)).ToListAsync();
+                .Where(comm => comm.PostId == postId)
+                .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
+                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
+                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.PostCommentAttachments)
+                .Include(comm => comm.Likes)
+                .OrderByDescending(comm => comm.CreatedDate).Skip(skip).Take(take)
+                .Select(comm => _mapper.Map<ReturnPostCommentModel>(comm)).ToListAsync();
 
             return postComments;
         }

@@ -41,7 +41,7 @@ namespace Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("{userId}")]
+        [Route("{userId:guid}")]
         public async Task<FileStreamResult> GetUserAvatar(Guid userId, bool download = false)
         {
             return RenderAttachment(await _userService.GetAvatarById(userId), download);
@@ -49,7 +49,7 @@ namespace Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("{postAttachmentId}")]
+        [Route("{postAttachmentId:guid}")]
         public async Task<FileStreamResult> GetPostAttachment(Guid postAttachmentId, bool download = false)
         {
             return RenderAttachment(await _postService.GetPostAttachmentById(postAttachmentId), download);
@@ -57,7 +57,7 @@ namespace Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("{postCommentAttachmentId}")]
+        [Route("{postCommentAttachmentId:guid}")]
         public async Task<FileStreamResult> GetPostCommentAttachment(Guid postCommentAttachmentId, bool download = false)
         {
             return RenderAttachment(await _postCommentService.GetPostCommentAttachmentById(postCommentAttachmentId), download);

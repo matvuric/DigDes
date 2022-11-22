@@ -39,7 +39,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task<Guid> CreatePost(CreatePostModel model)
+        public async Task CreatePost(CreatePostModel model)
         {
             if (!model.AuthorId.HasValue)
             {
@@ -49,43 +49,47 @@ namespace Api.Controllers
                 {
                     throw new UnauthorizedException();
                 }
-                else
-                {
-                    model.AuthorId = userId;
-                }
+
+                model.AuthorId = userId;
             }
 
-            return await _postService.CreatePost(model);
+            await _postService.CreatePost(model);
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IEnumerable<ReturnPostModel>> GetPosts(int skip, int take = 10)
         {
             return await _postService.GetPosts(skip, take);
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<ReturnPostWithCommentsModel> GetPostById(Guid postId)
         {
-            return await _postService.GetPostWithComments(postId);
+            var currentUserId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            return await _postService.GetPostWithComments(currentUserId, postId);
         }
 
         [HttpGet]
         public async Task<IEnumerable<ReturnPostModel>> GetCurrentUserPosts(int skip, int take = 10)
         {
-            return await _postService.GetCurrentUserPosts(User.GetClaimValue<Guid>(ClaimNames.Id), skip, take);
+            return await _postService.GetUserPosts(User.GetClaimValue<Guid>(ClaimNames.Id), skip, take);
         }
 
         [HttpGet]
-        public async Task<IEnumerable<ReturnPostModel>> GetUserFollowingPosts(int skip, int take = 10)
+        public async Task<IEnumerable<ReturnPostModel>> GetUserPostsByUserId(Guid userId, int skip, int take = 10)
         {
-            return await _postService.GetUserFollowingPosts(User.GetClaimValue<Guid>(ClaimNames.Id), skip, take);
+            var currentUserId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            return await _postService.GetUserPostsByUserId(currentUserId, userId, skip, take);
+        }
+
+        [HttpGet]
+        public async Task<IEnumerable<ReturnPostModel>> GetUserFollowingPosts()
+        {
+            return await _postService.GetUserFollowingPosts(User.GetClaimValue<Guid>(ClaimNames.Id));
         }
 
         [HttpPost]
-        public async Task<Guid> CreatePostComment(CreatePostCommentModel model)
+        public async Task CreatePostComment(CreatePostCommentModel model)
         {
             if (!model.AuthorId.HasValue)
             {
@@ -101,18 +105,16 @@ namespace Api.Controllers
                 }
             }
 
-            return await _postCommentService.CreatePostComment(model);
+            await _postCommentService.CreatePostComment(model);
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IEnumerable<ReturnPostCommentModel>> GetPostComments(int skip, int take = 10)
         {
             return await _postCommentService.GetPostComments(skip, take);
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<ReturnPostCommentModel> GetPostCommentById(Guid postCommentId)
         {
             return await _postCommentService.GetPostComment(postCommentId);
@@ -125,8 +127,7 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
-        public async Task<IEnumerable<ReturnPostCommentModel>> GetPostCommentsById(Guid postId, int skip, int take = 10)
+        public async Task<IEnumerable<ReturnPostCommentModel>> GetPostCommentsByPostId(Guid postId, int skip, int take = 10)
         {
             return await _postCommentService.GetPostCommentsByPostId(postId, skip, take);
         }
@@ -142,10 +143,8 @@ namespace Api.Controllers
                 {
                     throw new UnauthorizedException();
                 }
-                else
-                {
-                    model.AuthorId = userId;
-                }
+
+                model.AuthorId = userId;
             }
 
             await _likeService.LikePost(model);

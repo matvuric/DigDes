@@ -7,7 +7,7 @@
         public DateTimeOffset FollowDate { get; set; }
         public bool IsConfirmed { get; set; }
 
-        public virtual User? FollowerUser { get; set; }
-        public virtual User? FollowingUser { get; set; }
+        public virtual User FollowerUser { get; set; } = null!;
+        public virtual User FollowingUser { get; set; } = null!;
     }
 }

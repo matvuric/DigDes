@@ -48,5 +48,6 @@ namespace DAL
         public DbSet<Like> Likes => Set<Like>();
         public DbSet<PostLike> PostLikes => Set<PostLike>();
         public DbSet<PostCommentLike> PostCommentLikes => Set<PostCommentLike>();
+        public DbSet<Relation> Relations => Set<Relation>();
     }
 }

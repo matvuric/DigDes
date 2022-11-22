@@ -7,7 +7,7 @@ namespace Api.Models.Post
     {
         public Guid Id { get; set; }
         public string? Caption { get; set; }
-        public UserAvatarModel Author { get; set; } = null!;
+        public PostUserModel Author { get; set; } = null!;
         public List<AttachmentExternalModel>? PostAttachments { get; set; }
         public int CommentsCount { get; set; }
         public int LikesCount { get; set; }

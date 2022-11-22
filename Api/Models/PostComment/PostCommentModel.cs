@@ -1,4 +1,4 @@
-﻿using Api.Models.Post;
+﻿using Api.Models.Attachment;
 
 namespace Api.Models.PostComment
 {
@@ -8,6 +8,6 @@ namespace Api.Models.PostComment
         public Guid PostId { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
         public string? Caption { get; set; }
-        public List<PostCommentAttachmentModel>? PostCommentAttachments { get; set; }
+        public List<MetadataLinkModel>? PostCommentAttachments { get; set; }
     }
 }

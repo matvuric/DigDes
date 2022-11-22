@@ -61,7 +61,7 @@ namespace Api.Services
         {
             var like = await _context.PostLikes.FirstOrDefaultAsync(postLike => postLike.Id == likeId);
 
-            if (like == null || like == default)
+            if (like == null)
             {
                 throw new LikeNotFoundException();
             }
@@ -98,7 +98,7 @@ namespace Api.Services
             var like = await _context.PostCommentLikes.Where(postLike => postLike.AuthorId == userId)
                 .FirstOrDefaultAsync(postLike => postLike.PostCommentId == postCommentId);
 
-            return like;
+            return like!;
         }
 
         private async Task DeletePostCommentLike(Guid likeId)
@@ -112,7 +112,7 @@ namespace Api.Services
         {
             var like = await _context.PostCommentLikes.FirstOrDefaultAsync(postCommentLike => postCommentLike.Id == likeId);
 
-            if (like == null || like == default)
+            if (like == null)
             {
                 throw new LikeNotFoundException();
             }

@@ -1,7 +1,9 @@
 ﻿using Api.Models.Follow;
 using AutoMapper;
+using Common.Exceptions;
 using DAL;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services
 {
@@ -9,58 +11,66 @@ namespace Api.Services
     {
         private readonly DataContext _context;
         private readonly IMapper _mapper;
-        private readonly UserService _userService;
 
-        public FollowService(DataContext context, IMapper mapper, UserService userService)
+        public FollowService(DataContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
-            _userService = userService;
         }
 
         public async Task FollowUser(FollowModel model)
         {
-            var followingUser = await _userService.GetUserById(model.FollowingId);
+            var followingUser = await _context.Users
+                .FirstOrDefaultAsync(user => user.Id == model.FollowingId);
+
+            if (followingUser == null)
+            {
+                throw new UserNotFoundException();
+            }
+
             if (followingUser.IsPrivate)
             {
                 model.IsConfirmed = false;
             }
 
-            var relation = _mapper.Map<Relation>(model);
-            var followerUser = await _userService.GetUserById(model.FollowerId);
-
-            followerUser.Following?.Add(relation);
-
+            await _context.Relations.AddAsync(_mapper.Map<Relation>(model));
             await _context.SaveChangesAsync();
         }
 
         public async Task UnfollowUser(FollowModel model)
         {
-            var followerUser = await _userService.GetUserById(model.FollowerId);
-            var relation = followerUser.Following?.FirstOrDefault(x =>
-                x.FollowerId == model.FollowerId && x.FollowingId == model.FollowingId);
-
-            followerUser.Following?.Remove(relation!);
-
+            var relation = await GetRelation(model);
+            _context.Relations.Remove(relation);
             await _context.SaveChangesAsync();
         }
 
         public async Task ConfirmFollow(FollowModel model)
         {
-            var followerUser = await _userService.GetUserById(model.FollowerId);
-            var relation = followerUser.Following?.FirstOrDefault(x =>
-                x.FollowerId == model.FollowerId && x.FollowingId == model.FollowingId);
+            var relation = await GetRelation(model);
 
             if (model.IsConfirmed)
             {
-                relation!.IsConfirmed = true;
+                relation.IsConfirmed = true;
             }
             else
             {
-                followerUser.Following?.Remove(relation!);
+                _context.Relations.Remove(relation);
             }
 
             await _context.SaveChangesAsync();
+        }
+
+        private async Task<Relation> GetRelation(FollowModel model)
+        {
+            var relation = await _context.Relations
+                .FirstOrDefaultAsync(rel => rel.FollowerId == model.FollowerId && rel.FollowingId == model.FollowingId);
+
+            if (relation == null)
+            {
+                throw new RelationNotFoundException();
+            }
+
+            return relation;
         }
     }
 }

@@ -23,9 +23,15 @@ namespace Api.Mapper
             CreateMap<User, UserModel>();
             CreateMap<User, UserAvatarModel>()
                 .ForMember(dest => dest.PostsCount, opt => opt.MapFrom(src => src.Posts!.Count))
-                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
-                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)))
+                .ForMember(dest => dest.FollowersCount, opt => opt.MapFrom(src => src.Followers!.Count))
+                .ForMember(dest => dest.FollowingsCount, opt => opt.MapFrom(src => src.Following!.Count))
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => like.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => !like.IsPositive)))
                 .AfterMap<UserAvatarMapperAction>();
+            CreateMap<User, PostUserModel>()
+                .ForMember(dest => dest.FollowersCount, opt => opt.MapFrom(src => src.Followers!.Count))
+                .ForMember(dest => dest.FollowingsCount, opt => opt.MapFrom(src => src.Following!.Count))
+                .AfterMap<PostUserAvatarMapperAction>();
 
             CreateMap<Avatar, AttachmentModel>();
 
@@ -34,37 +40,39 @@ namespace Api.Mapper
 
             CreateMap<CreatePostModel, PostModel>();
 
-            CreateMap<MetadataModel, PostAttachmentModel>();
-            CreateMap<MetadataModel, PostCommentAttachmentModel>();
 
-            CreateMap<PostAttachmentModel, PostAttachment>();
+            CreateMap<MetadataModel, MetadataLinkModel>();
+
+            CreateMap<MetadataLinkModel, Avatar>();
+            CreateMap<MetadataLinkModel, PostAttachment>();
+            CreateMap<MetadataLinkModel, PostCommentAttachment>();
 
             CreateMap<PostModel, Post>()
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<Post, ReturnPostModel>()
                 .ForMember(dest => dest.CommentsCount, opt => opt.MapFrom(src => src.Comments!.Count))
-                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
-                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)));
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => like.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => !like.IsPositive)));
 
             CreateMap<Post, ReturnPostWithCommentsModel>()
                 .ForMember(dest => dest.PostComments, opt => opt.MapFrom(src => src.Comments))
-                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
-                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)));
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => like.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => !like.IsPositive)));
 
             CreateMap<PostCommentAttachment, AttachmentModel>();
             CreateMap<PostCommentAttachment, AttachmentExternalModel>().AfterMap<PostCommentAttachmentMapperAction>();
 
             CreateMap<CreatePostCommentModel, PostCommentModel>();
 
-            CreateMap<PostCommentAttachmentModel, PostCommentAttachment>();
+            
 
             CreateMap<PostCommentModel, PostComment>()
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<PostComment, ReturnPostCommentModel>()
-                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => x.IsPositive)))
-                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(x => !x.IsPositive)));
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => like.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => !like.IsPositive)));
 
             CreateMap<PostLikeModel, PostLike>();
             CreateMap<PostCommentLikeModel, PostCommentLike>();

@@ -12,23 +12,22 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DataContext _context;
+        private readonly AttachmentService _attachmentService;
 
-        public UserService(IMapper mapper, DataContext context)
+        public UserService(IMapper mapper, DataContext context, AttachmentService attachmentService)
         {
             _mapper = mapper;
             _context = context;
+            _attachmentService = attachmentService;
         }
 
-        public async Task<Guid> CreateUser(CreateUserModel model)
+        public async Task CreateUser(CreateUserModel model)
         {
             var dbUser = _mapper.Map<User>(model);
-
-            var userEntity = await _context.Users.AddAsync(dbUser);
+            await _context.Users.AddAsync(dbUser);
             await _context.SaveChangesAsync();
-
-            return userEntity.Entity.Id;
         }
-
+        // TODO: Edit user profile
         /*public async Task EditProfile(EditUserProfileModel model, Guid userId)
         {
             var user = await GetUserById(userId);
@@ -40,6 +39,8 @@ namespace Api.Services
                 .Include(user => user.Avatar)
                 .Include(user => user.Posts)
                 .Include(user => user.Likes)
+                .Include(user => user.Followers)
+                .Include(user => user.Following)
                 .Select(user => _mapper.Map<UserAvatarModel>(user)).ToListAsync();
         }
 
@@ -50,7 +51,7 @@ namespace Api.Services
             return _mapper.Map<User, UserAvatarModel>(user);
         }
 
-        public async Task<User> GetUserById(Guid? id)
+        public async Task<User> GetUserById(Guid id)
         {
             var user = await _context.Users
                 .Include(user => user.Avatar)
@@ -60,7 +61,7 @@ namespace Api.Services
                 .Include(user => user.Following)
                 .FirstOrDefaultAsync(user => user.Id == id);
 
-            if (user == null || user == default)
+            if (user == null)
             {
                 throw new UserNotFoundException();
             }
@@ -68,19 +69,18 @@ namespace Api.Services
             return user;
         }
 
-        public async Task SetAvatar(Guid userId, MetadataModel meta, string filePath)
+        public async Task SetAvatar(Guid userId, MetadataModel meta)
         {
-            var user = await GetUserById(userId);
-            var avatar = new Avatar
-            {
-                Name = meta.Name,
-                MimeType = meta.MimeType,
-                FilePath = filePath,
-                Size = meta.Size,
-                Author = user,
-            };
-            user.Avatar = avatar;
+            var model = _mapper.Map<MetadataLinkModel>(meta);
 
+            model.AuthorId = userId;
+            model.FilePath = Path.Combine(Directory.GetCurrentDirectory(),
+                "Attachments", model.TempId.ToString());
+            _attachmentService.MoveFile(model);
+
+            var user = await GetUserById(userId);
+            var avatar = _mapper.Map<Avatar>(model);
+            user.Avatar = avatar;
             await _context.SaveChangesAsync();
         }
 
@@ -92,7 +92,8 @@ namespace Api.Services
 
         public async Task<bool> CheckUserExist(string email)
         {
-            return await _context.Users.AnyAsync(user => user.Email.ToLower() == email.ToLower());
+            return await _context.Users
+                .AnyAsync(user => user.Email.ToLower() == email.ToLower());
         }
 
         public async Task DeleteUser(Guid userId)

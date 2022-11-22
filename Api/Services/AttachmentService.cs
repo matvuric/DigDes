@@ -17,6 +17,25 @@ namespace Api.Services
             return res;
         }
 
+        public void MoveFile(MetadataLinkModel model)
+        {
+            var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), model.TempId.ToString()));
+
+            if (!tempFileInfo.Exists)
+            {
+                throw new FileNotFoundException();
+            }
+
+            var destFileInfo = new FileInfo(model.FilePath);
+
+            if (destFileInfo.Directory is { Exists: false })
+            {
+                destFileInfo.Directory.Create();
+            }
+
+            File.Move(tempFileInfo.FullName, model.FilePath, true);
+        }
+
         private async Task<MetadataModel> UploadFile([FromForm] IFormFile file)
         {
             var tempPath = Path.GetTempPath();
@@ -29,21 +48,17 @@ namespace Api.Services
             };
 
             var newPath = Path.Combine(tempPath, meta.TempId.ToString());
-
             var fileInfo = new FileInfo(newPath);
+
             if (fileInfo.Exists)
             {
                 throw new Exception("File already exists");
             }
-            else
-            {
-                using (var stream = File.Create(newPath))
-                {
-                    await file.CopyToAsync(stream);
-                }
 
-                return meta;
-            }
+            await using var stream = File.Create(newPath);
+            await file.CopyToAsync(stream);
+
+            return meta;
         }
     }
 }

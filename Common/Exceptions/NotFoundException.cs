@@ -62,4 +62,12 @@
             Model = "Like";
         }
     }
+
+    public class RelationNotFoundException : NotFoundException
+    {
+        public RelationNotFoundException()
+        {
+            Model = "Relation";
+        }
+    }
 }
