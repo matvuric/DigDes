@@ -69,20 +69,16 @@ namespace Api.Controllers
             {
                 throw new AttachmentNotFoundException();
             }
-            else
-            {
-                var fileStream = new FileStream(attachment.FilePath, FileMode.Open);
-                var extension = Path.GetExtension(attachment.Name);
 
-                if (download)
-                {
-                    return File(fileStream, attachment.MimeType, $"{attachment.Id}{extension}");
-                }
-                else
-                {
-                    return File(fileStream, attachment.MimeType);
-                }
+            var fileStream = new FileStream(attachment.FilePath, FileMode.Open);
+            var extension = Path.GetExtension(attachment.Name);
+
+            if (download)
+            {
+                return File(fileStream, attachment.MimeType, $"{attachment.Id}{extension}");
             }
+            
+            return File(fileStream, attachment.MimeType);
         }
     }
 }

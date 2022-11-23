@@ -42,33 +42,6 @@ namespace Api.Services
             }
         }
 
-        private async Task<PostLike> GetPostLikeByIds(Guid? userId, Guid postId)
-        {
-            var like = await _context.PostLikes.Where(postLike => postLike.AuthorId == userId)
-                .FirstOrDefaultAsync(postLike => postLike.PostId == postId);
-
-            return like!;
-        }
-
-        private async Task DeletePostLike(Guid postLikeId)
-        {
-            var dbPostLike = await GetPostLikeById(postLikeId);
-            _context.PostLikes.Remove(dbPostLike);
-            await _context.SaveChangesAsync();
-        }
-
-        private async Task<PostLike> GetPostLikeById(Guid likeId)
-        {
-            var like = await _context.PostLikes.FirstOrDefaultAsync(postLike => postLike.Id == likeId);
-
-            if (like == null)
-            {
-                throw new LikeNotFoundException();
-            }
-
-            return like;
-        }
-
         public async Task LikePostComment(PostCommentLikeModel model)
         {
             var lastLike = await GetPostCommentLikeByIds(model.AuthorId, model.PostCommentId);
@@ -93,6 +66,14 @@ namespace Api.Services
             }
         }
 
+        private async Task<PostLike> GetPostLikeByIds(Guid? userId, Guid postId)
+        {
+            var like = await _context.PostLikes.Where(postLike => postLike.AuthorId == userId)
+                .FirstOrDefaultAsync(postLike => postLike.PostId == postId);
+
+            return like!;
+        }
+
         private async Task<PostCommentLike> GetPostCommentLikeByIds(Guid? userId, Guid postCommentId)
         {
             var like = await _context.PostCommentLikes.Where(postLike => postLike.AuthorId == userId)
@@ -101,11 +82,16 @@ namespace Api.Services
             return like!;
         }
 
-        private async Task DeletePostCommentLike(Guid likeId)
+        private async Task<PostLike> GetPostLikeById(Guid likeId)
         {
-            var dbPostCommentLike = await GetPostCommentLikeById(likeId);
-            _context.PostCommentLikes.Remove(dbPostCommentLike);
-            await _context.SaveChangesAsync();
+            var like = await _context.PostLikes.FirstOrDefaultAsync(postLike => postLike.Id == likeId);
+
+            if (like == null)
+            {
+                throw new LikeNotFoundException();
+            }
+
+            return like;
         }
 
         private async Task<PostCommentLike> GetPostCommentLikeById(Guid likeId)
@@ -118,6 +104,20 @@ namespace Api.Services
             }
 
             return like;
+        }
+
+        private async Task DeletePostLike(Guid postLikeId)
+        {
+            var dbPostLike = await GetPostLikeById(postLikeId);
+            _context.PostLikes.Remove(dbPostLike);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task DeletePostCommentLike(Guid likeId)
+        {
+            var dbPostCommentLike = await GetPostCommentLikeById(likeId);
+            _context.PostCommentLikes.Remove(dbPostCommentLike);
+            await _context.SaveChangesAsync();
         }
     }
 }

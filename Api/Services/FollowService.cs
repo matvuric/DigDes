@@ -20,6 +20,13 @@ namespace Api.Services
 
         public async Task FollowUser(FollowModel model)
         {
+            var relation = GetRelation(model);
+
+            if (relation != null)
+            {
+                throw new Exception("You are already followed");
+            }
+            
             var followingUser = await _context.Users
                 .FirstOrDefaultAsync(user => user.Id == model.FollowingId);
 

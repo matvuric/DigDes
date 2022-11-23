@@ -5,7 +5,6 @@ using Common.Exceptions;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
-using FileNotFoundException = Common.Exceptions.FileNotFoundException;
 
 namespace Api.Services
 {
@@ -37,6 +36,8 @@ namespace Api.Services
             await _context.Posts.AddAsync(dbPost);
             await _context.SaveChangesAsync();
         }
+
+        // TODO : Edit post
 
         public async Task<List<ReturnPostModel>> GetPosts(int skip, int take)
         {
@@ -163,34 +164,26 @@ namespace Api.Services
 
         public async Task<List<ReturnPostModel>> GetUserFollowingPosts(Guid userId)
         {
-            var user = await _context.Users
-                .Include(user => user.Following)!.ThenInclude(rel => rel.FollowingUser).ThenInclude(user => user.Avatar)
-                .Include(user => user.Following)!.ThenInclude(rel => rel.FollowingUser).ThenInclude(user => user.Posts)!.ThenInclude(post => post.PostAttachments)
-                .Include(user => user.Following)!.ThenInclude(rel => rel.FollowingUser).ThenInclude(user => user.Posts)!.ThenInclude(post => post.Comments)
-                .Include(user => user.Following)!.ThenInclude(rel => rel.FollowingUser).ThenInclude(user => user.Posts)!.ThenInclude(post => post.Likes)
-                .FirstOrDefaultAsync(user => user.Id == userId);
-
-            if (user == null)
-            {
-                throw new UserNotFoundException();
-            }
-
-            var followings = user.Following;
-
-            if (followings == null)
-            {
-                throw new Exception("You do not have followings");
-            }
+            var relations = await _context.Relations.Where(x => x.FollowerId == userId)
+                .Include(rel => rel.FollowingUser).ThenInclude(user => user.Avatar)
+                .Include(rel => rel.FollowingUser).ThenInclude(user => user.Posts)!.ThenInclude(post => post.PostAttachments)
+                .Include(rel => rel.FollowingUser).ThenInclude(user => user.Posts)!.ThenInclude(post => post.Comments)
+                .Include(rel => rel.FollowingUser).ThenInclude(user => user.Posts)!.ThenInclude(post => post.Likes).ToListAsync();
 
             var posts = new List<ReturnPostModel>();
 
-            foreach (var following in followings)
+            foreach (var relation in relations)
             {
-                var followingPosts = following.FollowingUser.Posts;
+                if (!relation.IsConfirmed)
+                {
+                    continue;
+                }
+
+                var followingPosts = relation.FollowingUser.Posts;
 
                 if (followingPosts == null)
                 {
-                    throw new Exception("There is no posts");
+                    continue;
                 }
 
                 foreach (var post in followingPosts)
@@ -199,7 +192,19 @@ namespace Api.Services
                 }
             }
 
+            if (posts.Count == 0)
+            {
+                throw new Exception("There is no posts");
+            }
+
             return posts;
+        }
+
+        public async Task DeletePost(Guid id)
+        {
+            var dbPost = await GetPostById(id, id);
+            _context.Posts.Remove(dbPost);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<AttachmentModel> GetPostAttachmentById(Guid postAttachmentId)

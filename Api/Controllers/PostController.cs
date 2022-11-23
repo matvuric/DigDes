@@ -99,10 +99,8 @@ namespace Api.Controllers
                 {
                     throw new UnauthorizedException();
                 }
-                else
-                {
-                    model.AuthorId = userId;
-                }
+
+                model.AuthorId = userId;
             }
 
             await _postCommentService.CreatePostComment(model);
@@ -161,10 +159,8 @@ namespace Api.Controllers
                 {
                     throw new UnauthorizedException();
                 }
-                else
-                {
-                    model.AuthorId = userId;
-                }
+
+                model.AuthorId = userId;
             }
 
             await _likeService.LikePostComment(model);

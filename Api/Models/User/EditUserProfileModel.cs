@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Api.Models.User
+﻿namespace Api.Models.User
 {
     public class EditUserProfileModel
     {

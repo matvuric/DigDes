@@ -32,10 +32,8 @@ namespace Api.Controllers
                 {
                     throw new UnauthorizedException();
                 }
-                else
-                {
-                    model.FollowerId = userId;
-                }
+                
+                model.FollowerId = userId;
             }
             await _followService.FollowUser(model);
         }
@@ -51,10 +49,8 @@ namespace Api.Controllers
                 {
                     throw new UnauthorizedException();
                 }
-                else
-                {
-                    model.FollowerId = userId;
-                }
+
+                model.FollowerId = userId;
             }
             await _followService.UnfollowUser(model);
         }

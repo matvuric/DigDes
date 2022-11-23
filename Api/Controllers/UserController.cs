@@ -6,7 +6,6 @@ using Common.Exceptions;
 using Common.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using FileNotFoundException = Common.Exceptions.FileNotFoundException;
 
 namespace Api.Controllers
 {

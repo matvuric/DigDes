@@ -37,12 +37,14 @@ namespace Api.Services
             await _context.SaveChangesAsync();
         }
 
+        // TODO : Edit post comment
+
         public async Task<List<ReturnPostCommentModel>> GetPostComments(int skip, int take)
         {
             var postComments = await _context.PostComments.AsNoTracking()
                 .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
-                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
-                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.Author).ThenInclude(user => user.Followers)
+                .Include(comm => comm.Author).ThenInclude(user => user.Following)
                 .Include(comm => comm.PostCommentAttachments)
                 .Include(comm => comm.Likes)
                 .OrderByDescending(comm => comm.CreatedDate).Skip(skip).Take(take)
@@ -62,8 +64,8 @@ namespace Api.Services
         {
             var postComment = await _context.PostComments
                 .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
-                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
-                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.Author).ThenInclude(user => user.Followers)
+                .Include(comm => comm.Author).ThenInclude(user => user.Following)
                 .Include(comm => comm.PostCommentAttachments)
                 .Include(comm => comm.Likes)
                 .FirstOrDefaultAsync(comm => comm.Id == id);
@@ -81,8 +83,8 @@ namespace Api.Services
             var postComments = await _context.PostComments.AsNoTracking()
                 .Where(comm => comm.AuthorId == userId)
                 .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
-                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
-                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.Author).ThenInclude(user => user.Followers)
+                .Include(comm => comm.Author).ThenInclude(user => user.Following)
                 .Include(comm => comm.PostCommentAttachments)
                 .Include(comm => comm.Likes)
                 .OrderByDescending(comm => comm.CreatedDate).Skip(skip).Take(take)
@@ -96,14 +98,21 @@ namespace Api.Services
             var postComments = await _context.PostComments.AsNoTracking()
                 .Where(comm => comm.PostId == postId)
                 .Include(comm => comm.Author).ThenInclude(user => user.Avatar)
-                .Include(comm => comm.Author).ThenInclude(user => user.Posts)
-                .Include(comm => comm.Author).ThenInclude(user => user.Likes)
+                .Include(comm => comm.Author).ThenInclude(user => user.Followers)
+                .Include(comm => comm.Author).ThenInclude(user => user.Following)
                 .Include(comm => comm.PostCommentAttachments)
                 .Include(comm => comm.Likes)
                 .OrderByDescending(comm => comm.CreatedDate).Skip(skip).Take(take)
                 .Select(comm => _mapper.Map<ReturnPostCommentModel>(comm)).ToListAsync();
 
             return postComments;
+        }
+
+        public async Task DeletePostComment(Guid id)
+        {
+            var dbPostComment = await GetPostCommentById(id);
+            _context.PostComments.Remove(dbPostComment);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<AttachmentModel> GetPostCommentAttachmentById(Guid postCommentAttachmentId)
