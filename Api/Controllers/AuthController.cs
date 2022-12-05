@@ -1,6 +1,7 @@
 ﻿using Api.Models.Token;
 using Api.Models.User;
 using Api.Services;
+using Common.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -22,7 +23,14 @@ namespace Api.Controllers
         [HttpPost]
         public async Task<TokenModel> Token(TokenRequestModel model)
         {
-            return await _authService.GetToken(model.Login, model.Password);
+            try
+            {
+                return await _authService.GetToken(model.Login, model.Password);
+            }
+            catch (Exception)
+            {
+                throw new UnauthorizedException();
+            }
         }
 
         [HttpPost]

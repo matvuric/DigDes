@@ -61,7 +61,7 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<UserModel> GetCurrentUser()
+        public async Task<UserProfileModel> GetCurrentUser()
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
 
@@ -70,7 +70,7 @@ namespace Api.Controllers
                 throw new UnauthorizedException();
             }
 
-            return await _userService.GetUser(userId);
+            return await _userService.GetCurrentUser(userId);
         }
 
         [HttpGet]

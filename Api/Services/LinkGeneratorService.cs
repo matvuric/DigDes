@@ -14,6 +14,11 @@ namespace Api.Services
             dest.AvatarLink = src.Avatar == null ? null : LinkAvatarGenerator?.Invoke(src.Id);
         }
 
+        public void FixProfile(User src, UserProfileModel dest)
+        {
+            dest.AvatarLink = src.Avatar == null ? null : LinkAvatarGenerator?.Invoke(src.Id);
+        }
+
         public void FixPostUserAvatar(User src, PostUserModel dest)
         {
             dest.AvatarLink = src.Avatar == null ? null : LinkAvatarGenerator?.Invoke(src.Id);

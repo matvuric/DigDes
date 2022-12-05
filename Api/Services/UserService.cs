@@ -44,6 +44,13 @@ namespace Api.Services
                 .Select(user => _mapper.Map<UserAvatarModel>(user)).ToListAsync();
         }
 
+        public async Task<UserProfileModel> GetCurrentUser(Guid id)
+        {
+            var user = await GetUserById(id);
+
+            return _mapper.Map<User, UserProfileModel>(user);
+        }
+
         public async Task<UserAvatarModel> GetUser(Guid id)
         {
             var user = await GetUserById(id);

@@ -19,4 +19,19 @@ namespace Api.Mapper.MapperActions
             _linkGeneratorService.FixAvatar(source, destination);
         }
     }
+
+    public class UserProfileMapperAction : IMappingAction<User, UserProfileModel>
+    {
+        private readonly LinkGeneratorService _linkGeneratorService;
+
+        public UserProfileMapperAction(LinkGeneratorService linkGeneratorService)
+        {
+            _linkGeneratorService = linkGeneratorService;
+        }
+
+        public void Process(User source, UserProfileModel destination, ResolutionContext context)
+        {
+            _linkGeneratorService.FixProfile(source, destination);
+        }
+    }
 }

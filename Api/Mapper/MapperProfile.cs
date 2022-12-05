@@ -32,6 +32,14 @@ namespace Api.Mapper
                 .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => !like.IsPositive)))
                 .AfterMap<UserAvatarMapperAction>();
 
+            CreateMap<User, UserProfileModel>()
+                .ForMember(dest => dest.PostsCount, opt => opt.MapFrom(src => src.Posts!.Count))
+                .ForMember(dest => dest.FollowersCount, opt => opt.MapFrom(src => src.Followers!.Count))
+                .ForMember(dest => dest.FollowingsCount, opt => opt.MapFrom(src => src.Following!.Count))
+                .ForMember(dest => dest.LikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => like.IsPositive)))
+                .ForMember(dest => dest.DislikesCount, opt => opt.MapFrom(src => src.Likes!.Count(like => !like.IsPositive)))
+                .AfterMap<UserProfileMapperAction>();
+
             CreateMap<User, PostUserModel>()
                 .ForMember(dest => dest.FollowersCount, opt => opt.MapFrom(src => src.Followers!.Count))
                 .ForMember(dest => dest.FollowingsCount, opt => opt.MapFrom(src => src.Following!.Count))
