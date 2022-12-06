@@ -28,19 +28,6 @@ namespace Api.Controllers
                     });
         }
 
-        /*[HttpPost]
-        public async Task EditProfile(EditUserProfileModel model)
-        {
-            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
-
-            if (userId == default)
-            {
-                throw new UnauthorizedException();
-            }
-
-            await _userService.EditProfile(model, userId);
-        }*/
-
         [HttpPost]
         public async Task SetAvatar(MetadataModel model)
         {
@@ -52,6 +39,19 @@ namespace Api.Controllers
             }
 
             await _userService.SetAvatar(userId, model);
+        }
+
+        [HttpPost]
+        public async Task EditUserProfile(EditUserProfileModel model)
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+
+            if (userId == default)
+            {
+                throw new UnauthorizedException();
+            }
+
+            await _userService.EditUserProfile(userId, model);
         }
 
         [HttpGet]

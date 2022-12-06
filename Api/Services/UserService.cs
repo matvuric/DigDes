@@ -27,11 +27,20 @@ namespace Api.Services
             await _context.Users.AddAsync(dbUser);
             await _context.SaveChangesAsync();
         }
-        // TODO : Edit user profile
-        /*public async Task EditProfile(EditUserProfileModel model, Guid userId)
+
+        public async Task EditUserProfile(Guid userId, EditUserProfileModel model)
         {
             var user = await GetUserById(userId);
-        }*/
+            user.Username = model.Username;
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Bio = model.Bio;
+            user.Email = model.Email;
+            user.Phone = model.Phone;
+            user.BirthDate = model.BirthDate;
+            user.IsPrivate = model.IsPrivate;
+            await _context.SaveChangesAsync();
+        }
 
         public async Task<IEnumerable<UserAvatarModel>> GetUsers()
         {

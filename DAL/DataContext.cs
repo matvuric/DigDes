@@ -16,6 +16,8 @@ namespace DAL
                 .HasIndex(x => x.Email).IsUnique();
             modelBuilder.Entity<User>()
                 .HasIndex(x => x.Username).IsUnique();
+            modelBuilder.Entity<User>()
+                .HasIndex(x => x.Phone).IsUnique();
             modelBuilder.Entity<Avatar>().ToTable(nameof(Avatars));
             modelBuilder.Entity<PostAttachment>().ToTable(nameof(PostAttachments));
             modelBuilder.Entity<PostCommentAttachment>().ToTable(nameof(PostCommentAttachments));
