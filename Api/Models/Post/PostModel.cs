@@ -7,6 +7,6 @@ namespace Api.Models.Post
         public Guid AuthorId { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
         public string? Caption { get; set; }
-        public List<MetadataLinkModel>? PostAttachments { get; set; }
+        public List<MetadataLinkModel> PostAttachments { get; set; } = null!;
     }
 }

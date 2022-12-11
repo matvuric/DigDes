@@ -24,7 +24,7 @@ namespace Api.Services
         public async Task CreatePost(CreatePostModel createModel)
         {
             var postModel = _mapper.Map<PostModel>(createModel);
-            postModel.PostAttachments?.ForEach(model =>
+            postModel.PostAttachments.ForEach(model =>
             {
                 model.AuthorId = postModel.AuthorId;
                 model.FilePath = Path.Combine(Directory.GetCurrentDirectory(),
