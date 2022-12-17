@@ -9,6 +9,7 @@ namespace Api.Models.Post
         public Guid Id { get; set; }
         public string? Caption { get; set; }
         public PostUserModel Author { get; set; } = null!;
+        public DateTimeOffset CreatedDate { get; set; }
         public List<AttachmentExternalModel> PostAttachments { get; set; } = null!;
         public List<ReturnPostCommentModel>? PostComments { get; set; }
         public int LikesCount { get; set; }

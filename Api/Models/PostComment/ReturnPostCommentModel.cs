@@ -7,7 +7,7 @@ namespace Api.Models.PostComment
     {
         public Guid Id { get; set; }
         public string? Caption { get; set; }
-        public string CreatedDate { get; set; } = null!;
+        public DateTimeOffset CreatedDate { get; set; }
         public PostUserModel Author { get; set; } = null!;
         public List<AttachmentExternalModel>? PostCommentAttachments { get; set; }
         public int LikesCount { get; set; }
