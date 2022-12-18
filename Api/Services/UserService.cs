@@ -24,8 +24,13 @@ namespace Api.Services
         public async Task CreateUser(CreateUserModel model)
         {
             var dbUser = _mapper.Map<User>(model);
-            await _context.Users.AddAsync(dbUser);
+            var t = await _context.Users.AddAsync(dbUser);
             await _context.SaveChangesAsync();
+
+            if (model.Image != null)
+            {
+                await SetAvatar(t.Entity.Id, model.Image);
+            }
         }
 
         public async Task EditUserProfile(Guid userId, EditUserProfileModel model)

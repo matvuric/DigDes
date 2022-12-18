@@ -28,6 +28,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<List<MetadataModel>> UploadFiles([FromForm] List<IFormFile> files)
         {
             return await _attachmentService.UploadFiles(files);

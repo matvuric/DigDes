@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Api.Models.Attachment;
+using System.ComponentModel.DataAnnotations;
 
 namespace Api.Models.User
 {
@@ -15,5 +16,6 @@ namespace Api.Models.User
         [Required][Compare(nameof(Password))] public string RetryPassword { get; set; } = null!;
         [Required] public DateTimeOffset BirthDate { get; set; }
         [Required] public bool IsPrivate { get; set; } = false;
+        public MetadataModel? Image { get; set; }
     }
 }
