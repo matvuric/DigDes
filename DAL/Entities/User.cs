@@ -13,6 +13,7 @@
         public string PasswordHash { get; set; } = string.Empty;
         public DateTimeOffset BirthDate { get; set; }
         public bool IsPrivate { get; set; }
+        public string? PushToken { get; set; }
 
         public virtual Avatar? Avatar { get; set; }
         public virtual ICollection<Post>? Posts { get; set; }
