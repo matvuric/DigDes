@@ -66,20 +66,29 @@ namespace Api.Controllers
 
         private FileStreamResult RenderAttachment(AttachmentModel attachment, bool download)
         {
-            if (attachment == null)
+            while (true)
             {
-                throw new AttachmentNotFoundException();
-            }
+                if (attachment == null)
+                {
+                    throw new AttachmentNotFoundException();
+                }
+                try
+                {
+                    var fileStream = new FileStream(attachment.FilePath, FileMode.Open);
+                    var extension = Path.GetExtension(attachment.Name);
 
-            var fileStream = new FileStream(attachment.FilePath, FileMode.Open);
-            var extension = Path.GetExtension(attachment.Name);
+                    if (download)
+                    {
+                        return File(fileStream, attachment.MimeType, $"{attachment.Id}{extension}");
+                    }
 
-            if (download)
-            {
-                return File(fileStream, attachment.MimeType, $"{attachment.Id}{extension}");
+                    return File(fileStream, attachment.MimeType);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+                }
             }
-            
-            return File(fileStream, attachment.MimeType);
         }
     }
 }

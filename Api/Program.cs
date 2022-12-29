@@ -14,6 +14,8 @@ internal class Program
     private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
 
         // Add services to the container.
         var authSection = builder.Configuration.GetSection(AuthConfig.Position);
